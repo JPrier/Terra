@@ -1,0 +1,92 @@
+# GitHub Pages Configuration
+title: Terra Digital Marketplace
+description: A global digital marketplace for everything you need
+baseurl: ""
+url: "https://jprier.github.io/Terra"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+# Exclude from processing
+exclude:
+  - backend/
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - .DS_Store
+  - .git/
+  - .gitignore
+
+# Collections
+collections:
+  products:
+    output: true
+    permalink: /:collection/:name/
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "posts"
+    values:
+      layout: "post"
+  - scope:
+      path: ""
+      type: "products"
+    values:
+      layout: "product"
+
+# Site settings
+author: Terra Marketplace Team
+email: contact@terra-marketplace.com
+social:
+  twitter: terra_marketplace
+  facebook: terra.marketplace
+  instagram: terra_marketplace
+  linkedin: company/terra-marketplace
+
+# SEO settings
+lang: en_US
+twitter:
+  username: terra_marketplace
+  card: summary_large_image
+
+facebook:
+  app_id: 
+  publisher: 
+
+social:
+  name: Terra Marketplace
+  links:
+    - https://twitter.com/terra_marketplace
+    - https://facebook.com/terra.marketplace
+    - https://instagram.com/terra_marketplace
+    - https://linkedin.com/company/terra-marketplace
+
+# Google Analytics (add your tracking ID)
+google_analytics: 
+
+# Marketplace specific settings
+marketplace:
+  currency: USD
+  shipping:
+    free_threshold: 50
+    standard_rate: 5.99
+  features:
+    - global_shipping
+    - secure_payments
+    - buyer_protection
+    - seller_tools

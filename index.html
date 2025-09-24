@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra - Digital Marketplace</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h1><i class="fas fa-globe"></i> Terra</h1>
+            </div>
+            <nav class="nav-menu">
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#products">Products</a></li>
+                    <li><a href="#categories">Categories</a></li>
+                    <li><a href="#about">About</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search products...">
+                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <button class="cart-btn" id="cart-btn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </button>
+                <button class="user-btn" id="user-btn">
+                    <i class="fas fa-user"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h2>Welcome to Terra Marketplace</h2>
+                <p>Discover amazing products from sellers around the world</p>
+                <button class="cta-button">Start Shopping</button>
+            </div>
+        </section>
+
+        <section id="categories" class="categories-section">
+            <div class="container">
+                <h2>Shop by Category</h2>
+                <div class="categories-grid">
+                    <div class="category-card">
+                        <i class="fas fa-tshirt"></i>
+                        <h3>Fashion</h3>
+                    </div>
+                    <div class="category-card">
+                        <i class="fas fa-laptop"></i>
+                        <h3>Electronics</h3>
+                    </div>
+                    <div class="category-card">
+                        <i class="fas fa-home"></i>
+                        <h3>Home & Garden</h3>
+                    </div>
+                    <div class="category-card">
+                        <i class="fas fa-book"></i>
+                        <h3>Books</h3>
+                    </div>
+                    <div class="category-card">
+                        <i class="fas fa-gamepad"></i>
+                        <h3>Gaming</h3>
+                    </div>
+                    <div class="category-card">
+                        <i class="fas fa-dumbbell"></i>
+                        <h3>Sports</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="products" class="products-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Featured Products</h2>
+                    <div class="filters">
+                        <select id="sort-filter">
+                            <option value="featured">Featured</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="rating">Highest Rated</option>
+                        </select>
+                        <select id="category-filter">
+                            <option value="all">All Categories</option>
+                            <option value="fashion">Fashion</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="home">Home & Garden</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="products-grid" id="products-grid">
+                    <!-- Products will be dynamically loaded here -->
+                </div>
+                <div class="loading" id="loading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading more products...
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Terra Marketplace</h3>
+                    <p>Your global digital marketplace for everything you need.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <ul>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Sell on Terra</h4>
+                    <ul>
+                        <li><a href="#">Start Selling</a></li>
+                        <li><a href="#">Seller Central</a></li>
+                        <li><a href="#">Seller Resources</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Connect</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Terra Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Shopping Cart Modal -->
+    <div class="modal" id="cart-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Shopping Cart</h3>
+                <button class="close-btn" id="close-cart">&times;</button>
+            </div>
+            <div class="modal-body" id="cart-items">
+                <!-- Cart items will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <div class="cart-total">
+                    <strong>Total: $<span id="cart-total">0.00</span></strong>
+                </div>
+                <button class="checkout-btn">Proceed to Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

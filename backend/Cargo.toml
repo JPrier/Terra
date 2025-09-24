@@ -1,0 +1,79 @@
+[package]
+name = "terra-backend"
+version = "0.1.0"
+edition = "2021"
+authors = ["Terra Marketplace Team"]
+description = "Terra Digital Marketplace Backend API"
+
+[dependencies]
+# AWS Lambda Runtime
+lambda_runtime = "0.8"
+lambda_web = "0.2"
+tokio = { version = "1", features = ["macros"] }
+
+# Web framework
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json"] }
+
+# Database (using DynamoDB for AWS)
+aws-config = "1.0"
+aws-sdk-dynamodb = "1.0"
+
+# Authentication and security
+jsonwebtoken = "9.0"
+bcrypt = "0.15"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Validation
+validator = { version = "0.16", features = ["derive"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Environment variables
+dotenvy = "0.15"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Email support
+lettre = "0.11"
+
+# Image processing
+image = "0.24"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[[bin]]
+name = "products"
+path = "src/lambdas/products.rs"
+
+[[bin]]
+name = "users"
+path = "src/lambdas/users.rs"
+
+[[bin]]
+name = "orders"
+path = "src/lambdas/orders.rs"
+
+[[bin]]
+name = "auth"
+path = "src/lambdas/auth.rs"
+
+[lib]
+name = "terra_backend"
+path = "src/lib.rs"
