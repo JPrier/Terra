@@ -8,21 +8,21 @@ use axum::{
 use application::{
     dto::*,
     services::RfqService,
+    ports::{ManufacturerRepository, ImageService},
 };
-use domain::entities::RfqMeta;
+use domain::entities::*;
+use domain::value_objects::*;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
 use crate::error::{AppError, Result};
 
 /// RFQ handlers
-pub struct RfqHandlers {
-    rfq_service: Arc<RfqService>,
-}
+pub struct RfqHandlers;
 
 impl RfqHandlers {
-    pub fn new(rfq_service: Arc<RfqService>) -> Self {
-        Self { rfq_service }
+    pub fn new() -> Self {
+        Self
     }
 
     pub fn router(rfq_service: Arc<RfqService>) -> Router {
@@ -111,24 +111,47 @@ impl RfqHandlers {
 pub struct UploadHandlers;
 
 impl UploadHandlers {
-    pub fn router() -> Router {
+    pub fn router(image_service: Arc<dyn ImageService + Send + Sync>) -> Router {
         Router::new()
             .route("/uploads/presign", post(Self::presign_upload))
+            .with_state(image_service)
     }
 
     /// POST /v1/uploads/presign - Generate presigned upload URL
     async fn presign_upload(
+        State(image_service): State<Arc<dyn ImageService + Send + Sync>>,
         Json(request): Json<PresignUploadRequest>,
     ) -> Result<Json<PresignUploadResponse>> {
         tracing::info!("Generating presigned URL for tenant {}", request.tenant_id);
 
-        // TODO: Implement upload service integration
-        // For now, return a placeholder
-        Err(AppError::new(
-            StatusCode::NOT_IMPLEMENTED,
-            "not_implemented",
-            "Upload service not yet implemented",
-        ))
+        // Validate and convert request - using simple validation for MVP
+        if request.tenant_id.is_empty() {
+            return Err(AppError::bad_request("Tenant ID cannot be empty"));
+        }
+        
+        if request.content_type.is_empty() {
+            return Err(AppError::bad_request("Content type cannot be empty"));
+        }
+        
+        if request.size_bytes == 0 || request.size_bytes > 15 * 1024 * 1024 {
+            return Err(AppError::bad_request("File size must be between 1 byte and 15MB"));
+        }
+
+        // For MVP, create simple wrappers
+        let tenant_id = TenantId::new(request.tenant_id)
+            .map_err(|e| AppError::bad_request(&format!("Invalid tenant ID: {}", e)))?;
+        let content_type = ContentType::new(request.content_type)
+            .map_err(|e| AppError::bad_request(&format!("Invalid content type: {}", e)))?;
+        let file_size = FileSize::new(request.size_bytes)
+            .map_err(|e| AppError::bad_request(&format!("Invalid file size: {}", e)))?;
+
+        // Generate presigned URL
+        let response = image_service
+            .generate_presigned_upload_url(&tenant_id, &content_type, &file_size)
+            .await
+            .map_err(|e| AppError::internal_server_error(&format!("Failed to generate upload URL: {}", e)))?;
+
+        Ok(Json(response))
     }
 }
 
@@ -136,19 +159,21 @@ impl UploadHandlers {
 pub struct ManufacturerHandlers;
 
 impl ManufacturerHandlers {
-    pub fn router() -> Router {
+    pub fn router(manufacturer_repo: Arc<dyn ManufacturerRepository + Send + Sync>) -> Router {
         Router::new()
             .route("/manufacturers", post(Self::create_manufacturer))
+            .with_state(manufacturer_repo)
     }
 
     /// POST /v1/manufacturers - Create/update manufacturer (admin)
     async fn create_manufacturer(
+        State(manufacturer_repo): State<Arc<dyn ManufacturerRepository + Send + Sync>>,
         headers: HeaderMap,
-        Json(_request): Json<CreateManufacturerRequest>,
+        Json(request): Json<CreateManufacturerRequest>,
     ) -> Result<(StatusCode, Json<CreateManufacturerResponse>)> {
-        tracing::info!("Creating/updating manufacturer");
+        tracing::info!("Creating/updating manufacturer for tenant {}", request.tenant_id);
 
-        // TODO: Implement authentication check for Bearer token
+        // Check for authentication header (simplified for MVP)
         let _auth_header = headers
             .get("authorization")
             .and_then(|h| h.to_str().ok())
@@ -158,12 +183,50 @@ impl ManufacturerHandlers {
                 "Missing authorization header",
             ))?;
 
-        // TODO: Implement manufacturer service integration
-        Err(AppError::new(
-            StatusCode::NOT_IMPLEMENTED,
-            "not_implemented",
-            "Manufacturer service not yet implemented",
-        ))
+        // Convert DTO to domain entity
+        let manufacturer = Manufacturer {
+            id: ManufacturerId::generate().as_str().to_string(),
+            tenant_id: request.tenant_id.clone(),
+            name: request.name,
+            description: request.description,
+            location: request.location.map(|loc| Location {
+                city: loc.city,
+                state: loc.state, 
+                country: loc.country,
+                lat: loc.lat,
+                lng: loc.lng,
+            }),
+            categories: request.capabilities.clone(),  // Using capabilities as categories for now
+            capabilities: Some(request.capabilities),
+            contact_email: Some(request.contact_email),
+            media: None, // Will be populated later via image uploads
+            updated_at: chrono::Utc::now(),
+        };
+
+        // Save manufacturer - convert to ManufacturerProfile first
+        let profile = ManufacturerProfile {
+            id: manufacturer.id.clone(),
+            tenant_id: manufacturer.tenant_id.clone(),
+            name: manufacturer.name.clone(),
+            description: manufacturer.description.clone(),
+            location: manufacturer.location.clone(),
+            categories: manufacturer.categories.clone(),
+            capabilities: manufacturer.capabilities.clone(),
+            contact_email: manufacturer.contact_email.clone(),
+            media: manufacturer.media.clone(),
+            offerings: None, // Will be populated later
+            updated_at: manufacturer.updated_at,
+        };
+
+        manufacturer_repo.save_manufacturer(&profile).await
+            .map_err(|e| AppError::internal_server_error(&format!("Failed to create manufacturer: {}", e)))?;
+
+        let response = CreateManufacturerResponse {
+            id: manufacturer.id.clone(),
+            tenant_id: manufacturer.tenant_id.clone(),
+        };
+
+        Ok((StatusCode::CREATED, Json(response)))
     }
 }
 
@@ -173,14 +236,18 @@ pub async fn health_check() -> &'static str {
 }
 
 /// Create the main application router
-pub fn create_app_router(rfq_service: Arc<RfqService>) -> Router {
+pub fn create_app_router(
+    rfq_service: Arc<RfqService>,
+    image_service: Arc<dyn ImageService + Send + Sync>,
+    manufacturer_repo: Arc<dyn ManufacturerRepository + Send + Sync>
+) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .nest("/v1", 
             Router::new()
                 .merge(RfqHandlers::router(rfq_service))
-                .merge(UploadHandlers::router())
-                .merge(ManufacturerHandlers::router())
+                .merge(UploadHandlers::router(image_service))
+                .merge(ManufacturerHandlers::router(manufacturer_repo))
         )
 }
 

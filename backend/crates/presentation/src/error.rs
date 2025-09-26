@@ -47,19 +47,7 @@ impl AppError {
 }
 
 /// Convenience constructors
-impl AppError {
-    pub fn BadRequest(message: String) -> Self {
-        Self::bad_request(&message)
-    }
 
-    pub fn NotFound(message: String) -> Self {
-        Self::not_found(&message)
-    }
-
-    pub fn InternalServerError(message: String) -> Self {
-        Self::internal_server_error(&message)
-    }
-}
 
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

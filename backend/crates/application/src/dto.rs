@@ -65,19 +65,19 @@ pub struct CreateManufacturerRequest {
     pub tenant_id: String,
     pub name: String,
     pub description: Option<String>,
+    pub website: Option<String>,
     pub location: Option<LocationDto>,
-    pub categories: Vec<String>,
-    pub capabilities: Option<Vec<String>>,
-    pub contact_email: Option<String>,
-    pub media: Option<Vec<MediaRefDto>>,
-    pub offerings: Option<Vec<OfferingDto>>,
+    pub capabilities: Vec<String>,
+    pub contact_email: String,
+    pub contact_phone: Option<String>,
+    pub offerings: Vec<OfferingDto>,
 }
 
-/// DTO for manufacturer update response
+/// DTO for manufacturer creation response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateManufacturerResponse {
-    pub ok: bool,
-    pub rebuild: Vec<String>,
+    pub id: String,
+    pub tenant_id: String,
 }
 
 // Supporting DTOs matching the entities

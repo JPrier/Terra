@@ -35,7 +35,7 @@ pub trait CatalogRepository {
 /// Service for managing image uploads and processing
 #[async_trait]
 pub trait ImageService {
-    async fn generate_presigned_upload_url(&self, tenant_id: &TenantId, content_type: &ContentType, size: &FileSize) -> Result<PresignedUploadResponse>;
+    async fn generate_presigned_upload_url(&self, tenant_id: &TenantId, content_type: &ContentType, size: &FileSize) -> Result<crate::dto::PresignUploadResponse>;
     async fn save_image_manifest(&self, manifest: &ImageManifest) -> Result<()>;
     async fn get_image_manifest(&self, id: &str) -> Result<Option<ImageManifest>>;
 }
@@ -54,10 +54,3 @@ pub trait IdempotencyService {
     async fn store_idempotency(&self, key: &str, body_hash: &str, response: &str) -> Result<()>;
 }
 
-/// Response for presigned upload URL generation
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct PresignedUploadResponse {
-    pub url: String,
-    pub key: String,
-    pub expires_in: u32,
-}

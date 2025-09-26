@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_s3::Client as S3Client;
+use aws_sdk_s3::presigning::PresigningConfig;
 use chrono::{DateTime, Utc};
 use domain::entities::*;
 use domain::events::*;
@@ -176,7 +177,7 @@ impl RfqRepository for S3RfqRepository {
                                 Ok(event) => {
                                     // Filter by since timestamp if provided
                                     if let Some(since_time) = since {
-                                        if event.timestamp() < &since_time {
+                                        if event.timestamp() < since_time {
                                             continue;
                                         }
                                     }
@@ -406,16 +407,60 @@ impl S3ImageService {
 
 #[async_trait]
 impl ImageService for S3ImageService {
-    async fn generate_presigned_upload_url(&self, _tenant_id: &TenantId, _content_type: &ContentType, _size: &FileSize) -> Result<PresignedUploadResponse> {
-        // For MVP, return a placeholder
-        Ok(PresignedUploadResponse {
-            url: "https://example.com/upload".to_string(),
-            key: "example-key".to_string(),
+    async fn generate_presigned_upload_url(&self, tenant_id: &TenantId, content_type: &ContentType, size: &FileSize) -> Result<application::dto::PresignUploadResponse> {
+        // Generate unique key for upload
+        let file_id = uuid::Uuid::new_v4();
+        let extension = match content_type.as_str() {
+            "image/jpeg" => "jpg",
+            "image/png" => "png", 
+            "image/webp" => "webp",
+            "image/avif" => "avif",
+            "application/pdf" => "pdf",
+            _ => "bin",
+        };
+        let key = format!("tenants/{}/images/raw/{}.{}", tenant_id.as_str(), file_id, extension);
+        
+        // Generate presigned URL with 10-minute expiration
+        let presign_config = PresigningConfig::builder()
+            .expires_in(std::time::Duration::from_secs(600))
+            .build()
+            .map_err(|e| DomainError::Internal(format!("Presign config error: {}", e)))?;
+            
+        let presigned_request = self.client
+            .put_object()
+            .bucket(&self.config.private_bucket)
+            .key(&key)
+            .content_type(content_type.as_str())
+            .content_length(size.as_u64() as i64)
+            .metadata("tenant", tenant_id.as_str())
+            .presigned(presign_config)
+            .await
+            .map_err(|e| DomainError::Internal(format!("Failed to generate presigned URL: {}", e)))?;
+        
+        Ok(application::dto::PresignUploadResponse {
+            url: presigned_request.uri().to_string(),
+            key: key.clone(),
             expires_in: 600,
         })
     }
 
-    async fn save_image_manifest(&self, _manifest: &ImageManifest) -> Result<()> {
+    async fn save_image_manifest(&self, manifest: &ImageManifest) -> Result<()> {
+        // For MVP, derive tenant from a shared pool since ImageManifest doesn't have tenant_id
+        let key = format!("tenants/shared/manifests/{}.json", manifest.id);
+        let body = serde_json::to_vec(manifest)
+            .map_err(|e| DomainError::Internal(format!("Failed to serialize manifest: {}", e)))?;
+            
+        self.client
+            .put_object()
+            .bucket(&self.config.public_bucket)
+            .key(&key)
+            .body(body.into())
+            .content_type("application/json")
+            .cache_control("public, max-age=31536000, immutable")
+            .send()
+            .await
+            .map_err(|e| DomainError::Internal(format!("Failed to save manifest: {}", e)))?;
+            
         Ok(())
     }
 
