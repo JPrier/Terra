@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Submit RFQ - Terra Manufacturing">
+  <h2>Submit Request for Quote</h2>
+  <p>Send your requirements directly to manufacturers and get quick responses.</p>
+
+  <div class="card">
+    <form id="rfq-form">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <label for="buyerName" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Your Name</label>
+          <input
+            type="text"
+            id="buyerName"
+            name="buyerName"
+            required
+            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;"
+          />
+        </div>
+        <div>
+          <label for="buyerEmail" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Email Address</label>
+          <input
+            type="email"
+            id="buyerEmail"
+            name="buyerEmail"
+            required
+            style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;"
+          />
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label for="subject" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Project Title</label>
+        <input
+          type="text"
+          id="subject"
+          name="subject"
+          placeholder="e.g., CNC milling prototype"
+          required
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px;"
+        />
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label for="description" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Project Description</label>
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Describe your project requirements, materials, quantities, timeline, etc."
+          required
+          style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; min-height: 120px; resize: vertical;"
+        ></textarea>
+      </div>
+
+      <div style="text-align: center;">
+        <button 
+          type="submit" 
+          class="btn btn-primary btn-large"
+          id="submit-btn"
+        >
+          Submit RFQ
+        </button>
+      </div>
+    </form>
+
+    <div id="success-message" style="display: none; text-align: center; padding: 2rem;">
+      <h3 style="color: #27ae60;">RFQ Submitted Successfully!</h3>
+      <p>Your RFQ has been sent to the manufacturer. You should receive a response within 24 hours.</p>
+      <p><strong>RFQ ID:</strong> <span id="rfq-id"></span></p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('rfq-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      const form = document.getElementById('rfq-form');
+      const successMessage = document.getElementById('success-message');
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+      
+      // Simulate API call (in production, this would call the actual API)
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const rfqId = 'r_' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        
+        form.style.display = 'none';
+        document.getElementById('rfq-id').textContent = rfqId;
+        successMessage.style.display = 'block';
+        
+        // In production, redirect to RFQ detail page
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 5000);
+        
+      } catch (error) {
+        alert('Error submitting RFQ. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit RFQ';
+      }
+    });
+  </script>
+</BaseLayout>

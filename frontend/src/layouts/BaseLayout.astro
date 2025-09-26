@@ -1,0 +1,40 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Terra - US Manufacturing Directory & RFQ Platform" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/src/styles/globals.css">
+  </head>
+  <body>
+    <header class="header">
+      <div class="header-content">
+        <h1>Terra</h1>
+        <p class="tagline">US Manufacturing Directory & RFQ Platform</p>
+        <nav class="nav">
+          <a href="/">Home</a>
+          <a href="/catalog/machining/">Browse Manufacturers</a>
+        </nav>
+      </div>
+    </header>
+    
+    <main class="main">
+      <slot />
+    </main>
+    
+    <footer style="text-align: center; padding: 2rem; color: #7f8c8d; border-top: 1px solid #eee; margin-top: 4rem;">
+      <p>&copy; 2024 Terra Manufacturing Platform. Built for American manufacturing.</p>
+    </footer>
+  </body>
+</html>

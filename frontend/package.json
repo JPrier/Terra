@@ -1,0 +1,22 @@
+{
+  "name": "terra-frontend",
+  "version": "0.1.0",
+  "description": "Terra Manufacturing Platform Frontend - Astro SSG",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^4.0.0",
+    "@astrojs/svelte": "^5.0.0",
+    "svelte": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0"
+  }
+}
