@@ -7,6 +7,7 @@ export default defineConfig({
   build: {
     assets: 'assets'
   },
-  site: 'https://terra-platform.com',
+  site: process.env.GITHUB_PAGES_URL || 'https://terra-platform.com',
+  base: process.env.GITHUB_PAGES_BASE || '/',
   compressHTML: true
 });

@@ -109,6 +109,20 @@ npm run build
 npm run dev
 ```
 
+### GitHub Pages Deployment
+
+The repository is configured to automatically deploy the frontend to GitHub Pages when changes are pushed to the main branch. The deployment workflow:
+
+1. **Automatic Deployment**: Pushes to `main` branch trigger GitHub Pages deployment
+2. **Manual Deployment**: Can be triggered via GitHub Actions "Deploy to GitHub Pages" workflow
+3. **Build Process**: Uses Astro static site generation with optimized assets
+4. **Configuration**: Automatically adapts to GitHub Pages URL structure
+
+To enable GitHub Pages deployment:
+1. Go to repository Settings > Pages
+2. Set Source to "GitHub Actions" 
+3. The site will be available at `https://[username].github.io/Terra/`
+
 ### Content Generation
 
 The Publisher Lambda generates both JSON data and static HTML pages:
