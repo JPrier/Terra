@@ -10,7 +10,7 @@ pub struct Config {
 impl Config {
     pub fn from_env() -> Self {
         let env = env::var("ENVIRONMENT").unwrap_or_else(|_| "dev".to_string());
-        
+
         Self {
             public_bucket: format!("app-public-{}", env),
             private_bucket: format!("app-private-{}", env),

@@ -47,8 +47,6 @@ impl AppError {
 }
 
 /// Convenience constructors
-
-
 impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)
@@ -73,26 +71,14 @@ impl IntoResponse for AppError {
 impl From<DomainError> for AppError {
     fn from(err: DomainError) -> Self {
         match err {
-            DomainError::ValidationFailed(msg) => AppError::new(
-                StatusCode::BAD_REQUEST,
-                "validation_error",
-                &msg,
-            ),
-            DomainError::NotFound(msg) => AppError::new(
-                StatusCode::NOT_FOUND,
-                "not_found",
-                &msg,
-            ),
-            DomainError::Conflict(msg) => AppError::new(
-                StatusCode::CONFLICT,
-                "conflict",
-                &msg,
-            ),
-            DomainError::InvalidInput(msg) => AppError::new(
-                StatusCode::BAD_REQUEST,
-                "invalid_input",
-                &msg,
-            ),
+            DomainError::ValidationFailed(msg) => {
+                AppError::new(StatusCode::BAD_REQUEST, "validation_error", &msg)
+            }
+            DomainError::NotFound(msg) => AppError::new(StatusCode::NOT_FOUND, "not_found", &msg),
+            DomainError::Conflict(msg) => AppError::new(StatusCode::CONFLICT, "conflict", &msg),
+            DomainError::InvalidInput(msg) => {
+                AppError::new(StatusCode::BAD_REQUEST, "invalid_input", &msg)
+            }
             DomainError::Internal(msg) => {
                 tracing::error!("Internal error: {}", msg);
                 AppError::new(
@@ -100,7 +86,7 @@ impl From<DomainError> for AppError {
                     "internal_error",
                     "An internal error occurred",
                 )
-            },
+            }
         }
     }
 }

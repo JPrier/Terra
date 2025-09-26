@@ -24,4 +24,5 @@ aws-sdk-s3 = { workspace = true }
 aws-sdk-sesv2 = { workspace = true }
 axum = { workspace = true }
 tower = { workspace = true }
+tower-http = { workspace = true }
 anyhow = { workspace = true }

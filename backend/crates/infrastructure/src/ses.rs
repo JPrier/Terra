@@ -1,14 +1,15 @@
+use application::ports::EmailService;
 use async_trait::async_trait;
 use aws_sdk_sesv2::Client as SesClient;
 use domain::entities::*;
+use domain::error::Result;
 use domain::events::*;
-use domain::error::{Result};
-use application::ports::EmailService;
 use std::sync::Arc;
 
 use crate::config::Config;
 
 /// SES-based email service implementation
+#[allow(dead_code)]
 pub struct SesEmailService {
     client: SesClient,
     config: Arc<Config>,
@@ -44,12 +45,15 @@ impl EmailService for SesEmailService {
         );
 
         // Find manufacturer email from participants
-        let manufacturer_email = rfq.participants.iter()
+        let manufacturer_email = rfq
+            .participants
+            .iter()
             .find(|p| p.role == ParticipantRole::Manufacturer)
             .map(|p| &p.email);
 
         if let Some(to_email) = manufacturer_email {
-            self.send_email(to_email, &manufacturer_subject, &manufacturer_body).await?;
+            self.send_email(to_email, &manufacturer_subject, &manufacturer_body)
+                .await?;
         }
 
         // Send confirmation to buyer
@@ -68,7 +72,8 @@ impl EmailService for SesEmailService {
             rfq.id
         );
 
-        self.send_email(&rfq.buyer.email, buyer_subject, &buyer_body).await?;
+        self.send_email(&rfq.buyer.email, buyer_subject, &buyer_body)
+            .await?;
 
         Ok(())
     }
@@ -78,7 +83,9 @@ impl EmailService for SesEmailService {
             let (to_email, from_role) = match message_event.base.by {
                 EventAuthor::Buyer => {
                     // Message from buyer, notify manufacturer
-                    let manufacturer_email = rfq.participants.iter()
+                    let manufacturer_email = rfq
+                        .participants
+                        .iter()
                         .find(|p| p.role == ParticipantRole::Manufacturer)
                         .map(|p| &p.email);
                     (manufacturer_email, "buyer")
@@ -106,10 +113,7 @@ impl EmailService for SesEmailService {
                     Please log in to your account to view the full conversation and respond.\n\n\
                     Best regards,\n\
                     Terra Platform",
-                    rfq.subject,
-                    rfq.id,
-                    from_role,
-                    message_event.body
+                    rfq.subject, rfq.id, from_role, message_event.body
                 );
 
                 self.send_email(recipient_email, &subject, &body).await?;
@@ -123,7 +127,11 @@ impl EmailService for SesEmailService {
 impl SesEmailService {
     async fn send_email(&self, _to_email: &str, _subject: &str, _body: &str) -> Result<()> {
         // For MVP, we'll just log the email instead of actually sending it
-        tracing::info!("Would send email to {} with subject: {}", _to_email, _subject);
+        tracing::info!(
+            "Would send email to {} with subject: {}",
+            _to_email,
+            _subject
+        );
         Ok(())
     }
 }

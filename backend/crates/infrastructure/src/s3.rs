@@ -1,14 +1,14 @@
+use application::ports::*;
 use async_trait::async_trait;
-use aws_sdk_s3::Client as S3Client;
 use aws_sdk_s3::presigning::PresigningConfig;
+use aws_sdk_s3::Client as S3Client;
 use chrono::{DateTime, Utc};
 use domain::entities::*;
+use domain::error::{DomainError, Result};
 use domain::events::*;
 use domain::value_objects::*;
-use domain::error::{DomainError, Result};
-use application::ports::*;
-use std::sync::Arc;
 use sha2::Digest;
+use std::sync::Arc;
 
 use crate::config::Config;
 
@@ -31,7 +31,8 @@ impl RfqRepository for S3RfqRepository {
         let body = serde_json::to_string(rfq)
             .map_err(|e| DomainError::Internal(format!("Failed to serialize RFQ meta: {}", e)))?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -46,8 +47,9 @@ impl RfqRepository for S3RfqRepository {
 
     async fn get_rfq_meta(&self, id: &RfqId) -> Result<Option<RfqMeta>> {
         let key = format!("rfq/{}/meta.json", id.as_str());
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -55,13 +57,19 @@ impl RfqRepository for S3RfqRepository {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read RFQ meta body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!("Failed to read RFQ meta body: {}", e))
+                    })?
                     .into_bytes();
-                
-                let rfq_meta: RfqMeta = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize RFQ meta: {}", e)))?;
-                
+
+                let rfq_meta: RfqMeta = serde_json::from_slice(&body).map_err(|e| {
+                    DomainError::Internal(format!("Failed to deserialize RFQ meta: {}", e))
+                })?;
+
                 Ok(Some(rfq_meta))
             }
             Err(e) => {
@@ -69,7 +77,10 @@ impl RfqRepository for S3RfqRepository {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch RFQ meta: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch RFQ meta: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -80,7 +91,8 @@ impl RfqRepository for S3RfqRepository {
         let body = serde_json::to_string(index)
             .map_err(|e| DomainError::Internal(format!("Failed to serialize RFQ index: {}", e)))?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -95,8 +107,9 @@ impl RfqRepository for S3RfqRepository {
 
     async fn get_rfq_index(&self, id: &RfqId) -> Result<Option<RfqIndex>> {
         let key = format!("rfq/{}/index.json", id.as_str());
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -104,20 +117,29 @@ impl RfqRepository for S3RfqRepository {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read RFQ index body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!("Failed to read RFQ index body: {}", e))
+                    })?
                     .into_bytes();
-                
-                let rfq_index: RfqIndex = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize RFQ index: {}", e)))?;
-                
+
+                let rfq_index: RfqIndex = serde_json::from_slice(&body).map_err(|e| {
+                    DomainError::Internal(format!("Failed to deserialize RFQ index: {}", e))
+                })?;
+
                 Ok(Some(rfq_index))
             }
             Err(e) => {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch RFQ index: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch RFQ index: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -125,11 +147,17 @@ impl RfqRepository for S3RfqRepository {
 
     async fn save_rfq_event(&self, event: &RfqEvent) -> Result<()> {
         let ts_str = event.timestamp().format("%Y-%m-%dT%H-%M-%SZ").to_string();
-        let key = format!("rfq/{}/events/{}-{}.json", event.rfq_id(), ts_str, event.id());
+        let key = format!(
+            "rfq/{}/events/{}-{}.json",
+            event.rfq_id(),
+            ts_str,
+            event.id()
+        );
         let body = serde_json::to_string(event)
             .map_err(|e| DomainError::Internal(format!("Failed to serialize RFQ event: {}", e)))?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -142,11 +170,17 @@ impl RfqRepository for S3RfqRepository {
         Ok(())
     }
 
-    async fn list_rfq_events(&self, rfq_id: &RfqId, since: Option<DateTime<Utc>>, limit: Option<u32>) -> Result<Vec<RfqEvent>> {
+    async fn list_rfq_events(
+        &self,
+        rfq_id: &RfqId,
+        since: Option<DateTime<Utc>>,
+        limit: Option<u32>,
+    ) -> Result<Vec<RfqEvent>> {
         let prefix = format!("rfq/{}/events/", rfq_id.as_str());
         let limit = limit.unwrap_or(100).min(1000); // Reasonable upper bound
-        
-        let list_response = self.client
+
+        let list_response = self
+            .client
             .list_objects_v2()
             .bucket(&self.config.private_bucket)
             .prefix(&prefix)
@@ -156,12 +190,13 @@ impl RfqRepository for S3RfqRepository {
             .map_err(|e| DomainError::Internal(format!("Failed to list RFQ events: {}", e)))?;
 
         let mut events = Vec::new();
-        
+
         if let Some(objects) = list_response.contents {
             for object in objects {
                 if let Some(key) = object.key {
                     // Try to get the object
-                    match self.client
+                    match self
+                        .client
                         .get_object()
                         .bucket(&self.config.private_bucket)
                         .key(&key)
@@ -169,10 +204,18 @@ impl RfqRepository for S3RfqRepository {
                         .await
                     {
                         Ok(response) => {
-                            let body = response.body.collect().await
-                                .map_err(|e| DomainError::Internal(format!("Failed to read event body: {}", e)))?
+                            let body = response
+                                .body
+                                .collect()
+                                .await
+                                .map_err(|e| {
+                                    DomainError::Internal(format!(
+                                        "Failed to read event body: {}",
+                                        e
+                                    ))
+                                })?
                                 .into_bytes();
-                            
+
                             match serde_json::from_slice::<RfqEvent>(&body) {
                                 Ok(event) => {
                                     // Filter by since timestamp if provided
@@ -200,7 +243,7 @@ impl RfqRepository for S3RfqRepository {
 
         // Sort by timestamp (events should be in order, but ensure it)
         events.sort_by_key(|e| e.timestamp());
-        
+
         Ok(events)
     }
 }
@@ -221,10 +264,12 @@ impl S3ManufacturerRepository {
 impl ManufacturerRepository for S3ManufacturerRepository {
     async fn save_manufacturer(&self, manufacturer: &ManufacturerProfile) -> Result<()> {
         let key = format!("manufacturer/{}.json", manufacturer.id);
-        let body = serde_json::to_string(manufacturer)
-            .map_err(|e| DomainError::Internal(format!("Failed to serialize manufacturer: {}", e)))?;
+        let body = serde_json::to_string(manufacturer).map_err(|e| {
+            DomainError::Internal(format!("Failed to serialize manufacturer: {}", e))
+        })?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -239,8 +284,9 @@ impl ManufacturerRepository for S3ManufacturerRepository {
 
     async fn get_manufacturer(&self, id: &ManufacturerId) -> Result<Option<ManufacturerProfile>> {
         let key = format!("manufacturer/{}.json", id.as_str());
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -248,20 +294,30 @@ impl ManufacturerRepository for S3ManufacturerRepository {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read manufacturer body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!("Failed to read manufacturer body: {}", e))
+                    })?
                     .into_bytes();
-                
-                let manufacturer: ManufacturerProfile = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize manufacturer: {}", e)))?;
-                
+
+                let manufacturer: ManufacturerProfile =
+                    serde_json::from_slice(&body).map_err(|e| {
+                        DomainError::Internal(format!("Failed to deserialize manufacturer: {}", e))
+                    })?;
+
                 Ok(Some(manufacturer))
             }
             Err(e) => {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch manufacturer: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch manufacturer: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -269,7 +325,7 @@ impl ManufacturerRepository for S3ManufacturerRepository {
 
     async fn delete_manufacturer(&self, id: &ManufacturerId) -> Result<()> {
         let key = format!("manufacturer/{}.json", id.as_str());
-        
+
         self.client
             .delete_object()
             .bucket(&self.config.public_bucket)
@@ -298,10 +354,12 @@ impl S3CatalogRepository {
 impl CatalogRepository for S3CatalogRepository {
     async fn save_category_slice(&self, slice: &CategorySlice) -> Result<()> {
         let key = format!("catalog/category/{}.json", slice.category);
-        let body = serde_json::to_string(slice)
-            .map_err(|e| DomainError::Internal(format!("Failed to serialize category slice: {}", e)))?;
+        let body = serde_json::to_string(slice).map_err(|e| {
+            DomainError::Internal(format!("Failed to serialize category slice: {}", e))
+        })?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -316,8 +374,9 @@ impl CatalogRepository for S3CatalogRepository {
 
     async fn get_category_slice(&self, category: &str) -> Result<Option<CategorySlice>> {
         let key = format!("catalog/category/{}.json", category);
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -325,31 +384,47 @@ impl CatalogRepository for S3CatalogRepository {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read category slice body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!("Failed to read category slice body: {}", e))
+                    })?
                     .into_bytes();
-                
-                let slice: CategorySlice = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize category slice: {}", e)))?;
-                
+
+                let slice: CategorySlice = serde_json::from_slice(&body).map_err(|e| {
+                    DomainError::Internal(format!("Failed to deserialize category slice: {}", e))
+                })?;
+
                 Ok(Some(slice))
             }
             Err(e) => {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch category slice: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch category slice: {}",
+                        e
+                    )))
                 }
             }
         }
     }
 
-    async fn save_category_state_slice(&self, category: &str, state: &str, slice: &CategorySlice) -> Result<()> {
+    async fn save_category_state_slice(
+        &self,
+        category: &str,
+        state: &str,
+        slice: &CategorySlice,
+    ) -> Result<()> {
         let key = format!("catalog/category_state/{}/{}.json", category, state);
-        let body = serde_json::to_string(slice)
-            .map_err(|e| DomainError::Internal(format!("Failed to serialize category state slice: {}", e)))?;
+        let body = serde_json::to_string(slice).map_err(|e| {
+            DomainError::Internal(format!("Failed to serialize category state slice: {}", e))
+        })?;
 
-        let _result = self.client
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -357,15 +432,22 @@ impl CatalogRepository for S3CatalogRepository {
             .content_type("application/json")
             .send()
             .await
-            .map_err(|e| DomainError::Internal(format!("Failed to save category state slice: {}", e)))?;
+            .map_err(|e| {
+                DomainError::Internal(format!("Failed to save category state slice: {}", e))
+            })?;
 
         Ok(())
     }
 
-    async fn get_category_state_slice(&self, category: &str, state: &str) -> Result<Option<CategorySlice>> {
+    async fn get_category_state_slice(
+        &self,
+        category: &str,
+        state: &str,
+    ) -> Result<Option<CategorySlice>> {
         let key = format!("catalog/category_state/{}/{}.json", category, state);
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -373,20 +455,35 @@ impl CatalogRepository for S3CatalogRepository {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read category state slice body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!(
+                            "Failed to read category state slice body: {}",
+                            e
+                        ))
+                    })?
                     .into_bytes();
-                
-                let slice: CategorySlice = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize category state slice: {}", e)))?;
-                
+
+                let slice: CategorySlice = serde_json::from_slice(&body).map_err(|e| {
+                    DomainError::Internal(format!(
+                        "Failed to deserialize category state slice: {}",
+                        e
+                    ))
+                })?;
+
                 Ok(Some(slice))
             }
             Err(e) => {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch category state slice: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch category state slice: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -407,26 +504,37 @@ impl S3ImageService {
 
 #[async_trait]
 impl ImageService for S3ImageService {
-    async fn generate_presigned_upload_url(&self, tenant_id: &TenantId, content_type: &ContentType, size: &FileSize) -> Result<application::dto::PresignUploadResponse> {
+    async fn generate_presigned_upload_url(
+        &self,
+        tenant_id: &TenantId,
+        content_type: &ContentType,
+        size: &FileSize,
+    ) -> Result<application::dto::PresignUploadResponse> {
         // Generate unique key for upload
         let file_id = uuid::Uuid::new_v4();
         let extension = match content_type.as_str() {
             "image/jpeg" => "jpg",
-            "image/png" => "png", 
+            "image/png" => "png",
             "image/webp" => "webp",
             "image/avif" => "avif",
             "application/pdf" => "pdf",
             _ => "bin",
         };
-        let key = format!("tenants/{}/images/raw/{}.{}", tenant_id.as_str(), file_id, extension);
-        
+        let key = format!(
+            "tenants/{}/images/raw/{}.{}",
+            tenant_id.as_str(),
+            file_id,
+            extension
+        );
+
         // Generate presigned URL with 10-minute expiration
         let presign_config = PresigningConfig::builder()
             .expires_in(std::time::Duration::from_secs(600))
             .build()
             .map_err(|e| DomainError::Internal(format!("Presign config error: {}", e)))?;
-            
-        let presigned_request = self.client
+
+        let presigned_request = self
+            .client
             .put_object()
             .bucket(&self.config.private_bucket)
             .key(&key)
@@ -435,8 +543,10 @@ impl ImageService for S3ImageService {
             .metadata("tenant", tenant_id.as_str())
             .presigned(presign_config)
             .await
-            .map_err(|e| DomainError::Internal(format!("Failed to generate presigned URL: {}", e)))?;
-        
+            .map_err(|e| {
+                DomainError::Internal(format!("Failed to generate presigned URL: {}", e))
+            })?;
+
         Ok(application::dto::PresignUploadResponse {
             url: presigned_request.uri().to_string(),
             key: key.clone(),
@@ -449,7 +559,7 @@ impl ImageService for S3ImageService {
         let key = format!("tenants/shared/manifests/{}.json", manifest.id);
         let body = serde_json::to_vec(manifest)
             .map_err(|e| DomainError::Internal(format!("Failed to serialize manifest: {}", e)))?;
-            
+
         self.client
             .put_object()
             .bucket(&self.config.public_bucket)
@@ -460,14 +570,15 @@ impl ImageService for S3ImageService {
             .send()
             .await
             .map_err(|e| DomainError::Internal(format!("Failed to save manifest: {}", e)))?;
-            
+
         Ok(())
     }
 
     async fn get_image_manifest(&self, id: &str) -> Result<Option<ImageManifest>> {
         let key = format!("tenants/shared/manifests/{}.json", id);
-        
-        match self.client
+
+        match self
+            .client
             .get_object()
             .bucket(&self.config.public_bucket)
             .key(&key)
@@ -475,20 +586,29 @@ impl ImageService for S3ImageService {
             .await
         {
             Ok(response) => {
-                let body = response.body.collect().await
-                    .map_err(|e| DomainError::Internal(format!("Failed to read image manifest body: {}", e)))?
+                let body = response
+                    .body
+                    .collect()
+                    .await
+                    .map_err(|e| {
+                        DomainError::Internal(format!("Failed to read image manifest body: {}", e))
+                    })?
                     .into_bytes();
-                
-                let manifest: ImageManifest = serde_json::from_slice(&body)
-                    .map_err(|e| DomainError::Internal(format!("Failed to deserialize image manifest: {}", e)))?;
-                
+
+                let manifest: ImageManifest = serde_json::from_slice(&body).map_err(|e| {
+                    DomainError::Internal(format!("Failed to deserialize image manifest: {}", e))
+                })?;
+
                 Ok(Some(manifest))
             }
             Err(e) => {
                 if e.to_string().contains("NoSuchKey") {
                     Ok(None)
                 } else {
-                    Err(DomainError::Internal(format!("Failed to fetch image manifest: {}", e)))
+                    Err(DomainError::Internal(format!(
+                        "Failed to fetch image manifest: {}",
+                        e
+                    )))
                 }
             }
         }
@@ -521,17 +641,19 @@ impl IdempotencyService for S3IdempotencyService {
 
     async fn store_idempotency(&self, key: &str, body_hash: &str, response: &str) -> Result<()> {
         let s3_key = self.idempotency_key(key);
-        
+
         let record = serde_json::json!({
             "body_hash": body_hash,
             "response": response,
             "stored_at": Utc::now().to_rfc3339()
         });
-        
-        let body = serde_json::to_string(&record)
-            .map_err(|e| DomainError::Internal(format!("Failed to serialize idempotency record: {}", e)))?;
 
-        let _result = self.client
+        let body = serde_json::to_string(&record).map_err(|e| {
+            DomainError::Internal(format!("Failed to serialize idempotency record: {}", e))
+        })?;
+
+        let _result = self
+            .client
             .put_object()
             .bucket(&self.config.private_bucket)
             .key(&s3_key)
@@ -539,7 +661,9 @@ impl IdempotencyService for S3IdempotencyService {
             .content_type("application/json")
             .send()
             .await
-            .map_err(|e| DomainError::Internal(format!("Failed to store idempotency record: {}", e)))?;
+            .map_err(|e| {
+                DomainError::Internal(format!("Failed to store idempotency record: {}", e))
+            })?;
 
         Ok(())
     }

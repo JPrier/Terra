@@ -10,20 +10,18 @@ impl JsonValidator {
     pub fn new(schema_value: Value) -> Result<Self, String> {
         let schema = JSONSchema::compile(&schema_value)
             .map_err(|e| format!("Failed to compile schema: {}", e))?;
-        
+
         Ok(Self { schema })
     }
-    
+
     pub fn validate(&self, instance: &Value) -> Result<(), String> {
         let result = self.schema.validate(instance);
-        
+
         match result {
             Ok(_) => Ok(()),
             Err(errors) => {
-                let error_messages: Vec<String> = errors
-                    .into_iter()
-                    .map(|e| e.to_string())
-                    .collect();
+                let error_messages: Vec<String> =
+                    errors.into_iter().map(|e| e.to_string()).collect();
                 Err(error_messages.join(", "))
             }
         }

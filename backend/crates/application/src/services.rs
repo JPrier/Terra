@@ -1,11 +1,11 @@
 use chrono::Utc;
 use domain::entities::*;
+use domain::error::{DomainError, Result};
 use domain::events::*;
 use domain::value_objects::*;
-use domain::error::{DomainError, Result};
+use sha2::Digest;
 use std::sync::Arc;
 use uuid::Uuid;
-use sha2::Digest;
 
 use crate::dto::*;
 use crate::ports::*;
@@ -33,13 +33,22 @@ impl RfqService {
         }
     }
 
-    pub async fn create_rfq(&self, request: CreateRfqRequest, idempotency_key: Option<&str>) -> Result<CreateRfqResponse> {
+    pub async fn create_rfq(
+        &self,
+        request: CreateRfqRequest,
+        idempotency_key: Option<&str>,
+    ) -> Result<CreateRfqResponse> {
         // Check idempotency if key provided
         if let Some(key) = idempotency_key {
             let body_hash = self.compute_request_hash(&request)?;
-            if let Some(cached_response) = self.idempotency_service.check_idempotency(key, &body_hash).await? {
-                return Ok(serde_json::from_str(&cached_response)
-                    .map_err(|_| DomainError::Internal("Failed to deserialize cached response".to_string()))?);
+            if let Some(cached_response) = self
+                .idempotency_service
+                .check_idempotency(key, &body_hash)
+                .await?
+            {
+                return serde_json::from_str(&cached_response).map_err(|_| {
+                    DomainError::Internal("Failed to deserialize cached response".to_string())
+                });
             }
         }
 
@@ -50,7 +59,10 @@ impl RfqService {
         let message_body = MessageBody::new(request.body.clone())?;
 
         // Verify manufacturer exists
-        let manufacturer = self.manufacturer_repository.get_manufacturer(&manufacturer_id).await?
+        let manufacturer = self
+            .manufacturer_repository
+            .get_manufacturer(&manufacturer_id)
+            .await?
             .ok_or_else(|| DomainError::NotFound("Manufacturer not found".to_string()))?;
 
         // Generate RFQ ID
@@ -69,7 +81,7 @@ impl RfqService {
             for attachment_dto in attachment_dtos {
                 let content_type = ContentType::new(attachment_dto.content_type)?;
                 let file_size = FileSize::new(attachment_dto.size_bytes)?;
-                
+
                 processed_attachments.push(AttachmentRef {
                     id: Uuid::new_v4().to_string(),
                     file_name: attachment_dto.file_name,
@@ -139,7 +151,9 @@ impl RfqService {
                 EventAuthor::Buyer,
                 attachments,
             );
-            self.rfq_repository.save_rfq_event(&attachment_event).await?;
+            self.rfq_repository
+                .save_rfq_event(&attachment_event)
+                .await?;
         }
 
         // Update RFQ index
@@ -150,7 +164,9 @@ impl RfqService {
         self.rfq_repository.save_rfq_index(&rfq_id, &index).await?;
 
         // Send notifications
-        self.email_service.send_rfq_created_notification(&rfq_meta).await?;
+        self.email_service
+            .send_rfq_created_notification(&rfq_meta)
+            .await?;
 
         let response = CreateRfqResponse {
             id: rfq_id.as_str().to_string(),
@@ -162,7 +178,9 @@ impl RfqService {
             let body_hash = self.compute_request_hash(&request)?;
             let response_json = serde_json::to_string(&response)
                 .map_err(|_| DomainError::Internal("Failed to serialize response".to_string()))?;
-            self.idempotency_service.store_idempotency(key, &body_hash, &response_json).await?;
+            self.idempotency_service
+                .store_idempotency(key, &body_hash, &response_json)
+                .await?;
         }
 
         Ok(response)
@@ -173,21 +191,33 @@ impl RfqService {
         self.rfq_repository.get_rfq_meta(&rfq_id).await
     }
 
-    pub async fn list_events(&self, rfq_id: &str, since: Option<String>, limit: Option<u32>) -> Result<ListEventsResponse> {
+    pub async fn list_events(
+        &self,
+        rfq_id: &str,
+        since: Option<String>,
+        limit: Option<u32>,
+    ) -> Result<ListEventsResponse> {
         let rfq_id = RfqId::new(rfq_id.to_string())?;
-        
+
         let since_dt = if let Some(since_str) = since {
-            Some(chrono::DateTime::parse_from_rfc3339(&since_str)
-                .map_err(|_| DomainError::ValidationFailed("Invalid since timestamp format".to_string()))?
-                .with_timezone(&Utc))
+            Some(
+                chrono::DateTime::parse_from_rfc3339(&since_str)
+                    .map_err(|_| {
+                        DomainError::ValidationFailed("Invalid since timestamp format".to_string())
+                    })?
+                    .with_timezone(&Utc),
+            )
         } else {
             None
         };
 
-        let events = self.rfq_repository.list_rfq_events(&rfq_id, since_dt, limit).await?;
-        
+        let events = self
+            .rfq_repository
+            .list_rfq_events(&rfq_id, since_dt, limit)
+            .await?;
+
         let event_dtos: Vec<RfqEventDto> = events.iter().map(|e| self.event_to_dto(e)).collect();
-        
+
         let next_since = events.last().map(|e| e.timestamp().to_rfc3339());
 
         Ok(ListEventsResponse {
@@ -196,29 +226,46 @@ impl RfqService {
         })
     }
 
-    pub async fn post_message(&self, rfq_id: &str, request: PostMessageRequest, idempotency_key: Option<&str>) -> Result<PostMessageResponse> {
+    pub async fn post_message(
+        &self,
+        rfq_id: &str,
+        request: PostMessageRequest,
+        idempotency_key: Option<&str>,
+    ) -> Result<PostMessageResponse> {
         let rfq_id = RfqId::new(rfq_id.to_string())?;
 
         // Check idempotency if key provided
         if let Some(key) = idempotency_key {
             let body_hash = self.compute_message_hash(&request)?;
-            if let Some(cached_response) = self.idempotency_service.check_idempotency(key, &body_hash).await? {
-                return Ok(serde_json::from_str(&cached_response)
-                    .map_err(|_| DomainError::Internal("Failed to deserialize cached response".to_string()))?);
+            if let Some(cached_response) = self
+                .idempotency_service
+                .check_idempotency(key, &body_hash)
+                .await?
+            {
+                return serde_json::from_str(&cached_response).map_err(|_| {
+                    DomainError::Internal("Failed to deserialize cached response".to_string())
+                });
             }
         }
 
         let message_body = MessageBody::new(request.body.clone())?;
 
         // Verify RFQ exists
-        let rfq_meta = self.rfq_repository.get_rfq_meta(&rfq_id).await?
+        let rfq_meta = self
+            .rfq_repository
+            .get_rfq_meta(&rfq_id)
+            .await?
             .ok_or_else(|| DomainError::NotFound("RFQ not found".to_string()))?;
 
         // Parse author
         let author = match request.by.as_str() {
             "buyer" => EventAuthor::Buyer,
             "manufacturer" => EventAuthor::Manufacturer,
-            _ => return Err(DomainError::ValidationFailed("Invalid author role".to_string())),
+            _ => {
+                return Err(DomainError::ValidationFailed(
+                    "Invalid author role".to_string(),
+                ))
+            }
         };
 
         // Create message event
@@ -234,14 +281,22 @@ impl RfqService {
         self.rfq_repository.save_rfq_event(&message_event).await?;
 
         // Update RFQ index
-        let mut index = self.rfq_repository.get_rfq_index(&rfq_id).await?
-            .unwrap_or(RfqIndex { last_event_ts: timestamp, count: 0 });
+        let mut index = self
+            .rfq_repository
+            .get_rfq_index(&rfq_id)
+            .await?
+            .unwrap_or(RfqIndex {
+                last_event_ts: timestamp,
+                count: 0,
+            });
         index.last_event_ts = timestamp;
         index.count += 1;
         self.rfq_repository.save_rfq_index(&rfq_id, &index).await?;
 
         // Send notification
-        self.email_service.send_rfq_message_notification(&rfq_meta, &message_event).await?;
+        self.email_service
+            .send_rfq_message_notification(&rfq_meta, &message_event)
+            .await?;
 
         let response = PostMessageResponse {
             ts: timestamp.to_rfc3339(),
@@ -252,7 +307,9 @@ impl RfqService {
             let body_hash = self.compute_message_hash(&request)?;
             let response_json = serde_json::to_string(&response)
                 .map_err(|_| DomainError::Internal("Failed to serialize response".to_string()))?;
-            self.idempotency_service.store_idempotency(key, &body_hash, &response_json).await?;
+            self.idempotency_service
+                .store_idempotency(key, &body_hash, &response_json)
+                .await?;
         }
 
         Ok(response)

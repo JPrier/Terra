@@ -107,14 +107,10 @@ impl RfqEvent {
     }
 
     /// Create a new message event
-    pub fn new_message(
-        rfq_id: String,
-        author: EventAuthor,
-        body: String,
-    ) -> Self {
+    pub fn new_message(rfq_id: String, author: EventAuthor, body: String) -> Self {
         let id = Uuid::new_v4().to_string();
         let ts = Utc::now();
-        
+
         RfqEvent::Message(MessageEvent {
             base: RfqEventBase {
                 id,
@@ -136,7 +132,7 @@ impl RfqEvent {
     ) -> Self {
         let id = Uuid::new_v4().to_string();
         let ts = Utc::now();
-        
+
         RfqEvent::Status(StatusEvent {
             base: RfqEventBase {
                 id,
@@ -158,7 +154,7 @@ impl RfqEvent {
     ) -> Self {
         let id = Uuid::new_v4().to_string();
         let ts = Utc::now();
-        
+
         RfqEvent::Attachment(AttachmentEvent {
             base: RfqEventBase {
                 id,

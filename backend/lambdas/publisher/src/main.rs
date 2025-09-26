@@ -1,10 +1,9 @@
-use lambda_runtime::{service_fn, Error, LambdaEvent};
-use serde_json::{Value, json};
-use serde::{Deserialize, Serialize};
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use aws_sdk_s3::Client as S3Client;
-use aws_config;
+use lambda_runtime::{service_fn, Error, LambdaEvent};
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::collections::HashMap;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Manufacturer {
@@ -35,7 +34,7 @@ impl HtmlTemplate {
             Some(state) => format!("{} Manufacturers in {}", slice.category, state),
             None => format!("{} Manufacturers", slice.category),
         };
-        
+
         let manufacturer_cards: String = slice.manufacturers.iter().map(|m| {
             format!(
                 r#"<article class="card manufacturer-card">
@@ -51,16 +50,16 @@ impl HtmlTemplate {
                         </div>
                     </div>
                 </article>"#,
-                m.logo_url.as_ref().map(|url| 
+                m.logo_url.as_ref().map(|url|
                     format!(r#"<img src="{}" alt="{}" class="manufacturer-logo" loading="lazy" width="160" height="100">"#, url, m.name)
                 ).unwrap_or_default(),
                 m.id,
                 m.name,
-                m.city.as_ref().zip(m.state.as_ref()).map(|(city, state)| 
+                m.city.as_ref().zip(m.state.as_ref()).map(|(city, state)|
                     format!(r#"<p class="location">{}, {}</p>"#, city, state)
                 ).unwrap_or_default(),
                 m.categories.join(", "),
-                m.capabilities.as_ref().map(|caps| 
+                m.capabilities.as_ref().map(|caps|
                     format!(r#"<p class="capabilities">Capabilities: {}</p>"#, caps.join(", "))
                 ).unwrap_or_default(),
                 m.id,
@@ -120,10 +119,18 @@ impl HtmlTemplate {
 </html>"#,
             title,
             slice.category,
-            slice.state.as_ref().map(|s| format!(" in {}", s)).unwrap_or_default(),
+            slice
+                .state
+                .as_ref()
+                .map(|s| format!(" in {}", s))
+                .unwrap_or_default(),
             title,
             slice.category,
-            slice.state.as_ref().map(|s| format!(" in {}", s)).unwrap_or_default(),
+            slice
+                .state
+                .as_ref()
+                .map(|s| format!(" in {}", s))
+                .unwrap_or_default(),
             serde_json::to_string(&slice.manufacturers).unwrap_or_default(),
             manufacturer_cards
         )
@@ -188,21 +195,21 @@ impl HtmlTemplate {
             manufacturer.description.as_deref().unwrap_or(&format!("{} - US Manufacturing", manufacturer.name)),
             manufacturer.categories.first().unwrap_or(&"manufacturing".to_string()),
             manufacturer.categories.first().unwrap_or(&"Manufacturing".to_string()),
-            manufacturer.logo_url.as_ref().map(|url| 
+            manufacturer.logo_url.as_ref().map(|url|
                 format!(r#"<img src="{}" alt="{}" style="width: 200px; height: 150px; object-fit: contain; border-radius: 8px; background: #f8f9fa;">"#, url, manufacturer.name)
             ).unwrap_or_default(),
             manufacturer.name,
-            manufacturer.city.as_ref().zip(manufacturer.state.as_ref()).map(|(city, state)| 
+            manufacturer.city.as_ref().zip(manufacturer.state.as_ref()).map(|(city, state)|
                 format!(r#"<p><strong>Location:</strong> {}, {}</p>"#, city, state)
             ).unwrap_or_default(),
             manufacturer.categories.join(", "),
-            manufacturer.capabilities.as_ref().map(|caps| 
+            manufacturer.capabilities.as_ref().map(|caps|
                 format!(r#"<p><strong>Capabilities:</strong> {}</p>"#, caps.join(", "))
             ).unwrap_or_default(),
-            manufacturer.contact_email.as_ref().map(|email| 
+            manufacturer.contact_email.as_ref().map(|email|
                 format!(r#"<p><strong>Contact:</strong> {}</p>"#, email)
             ).unwrap_or_default(),
-            manufacturer.description.as_ref().map(|desc| 
+            manufacturer.description.as_ref().map(|desc|
                 format!(r#"<div style="margin: 2rem 0;"><h3>About</h3><p>{}</p></div>"#, desc)
             ).unwrap_or_default(),
             manufacturer.id,
@@ -226,14 +233,14 @@ async fn main() -> Result<(), Error> {
 
 async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_runtime::Error> {
     let (event, _context) = event.into_parts();
-    
+
     tracing::info!("Processing catalog rebuild event: {}", event);
-    
+
     // Initialize AWS clients
     let config = aws_config::load_from_env().await;
     let s3_client = S3Client::new(&config);
     let bucket = std::env::var("PUBLIC_BUCKET").unwrap_or_else(|_| "app-public-dev".to_string());
-    
+
     // Mock data for MVP demonstration
     let sample_manufacturers = vec![
         Manufacturer {
@@ -278,7 +285,10 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
     let mut category_groups: HashMap<String, Vec<Manufacturer>> = HashMap::new();
     for manufacturer in &sample_manufacturers {
         for category in &manufacturer.categories {
-            category_groups.entry(category.clone()).or_default().push(manufacturer.clone());
+            category_groups
+                .entry(category.clone())
+                .or_default()
+                .push(manufacturer.clone());
         }
     }
 
@@ -291,13 +301,14 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
             manufacturers: manufacturers.clone(),
             last_updated: now.clone(),
         };
-        
+
         let json_key = format!("catalog/category/{}.json", category);
         let html_key = format!("catalog/{}/index.html", category);
-        
+
         // Upload JSON slice
         let json_body = serde_json::to_string(&slice).unwrap();
-        s3_client.put_object()
+        s3_client
+            .put_object()
             .bucket(&bucket)
             .key(&json_key)
             .body(json_body.into_bytes().into())
@@ -309,7 +320,8 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
 
         // Upload HTML page
         let html_body = HtmlTemplate::category_page(&slice);
-        s3_client.put_object()
+        s3_client
+            .put_object()
             .bucket(&bucket)
             .key(&html_key)
             .body(html_body.into_bytes().into())
@@ -325,7 +337,10 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
         let mut state_groups: HashMap<String, Vec<Manufacturer>> = HashMap::new();
         for manufacturer in &manufacturers {
             if let Some(state) = &manufacturer.state {
-                state_groups.entry(state.clone()).or_default().push(manufacturer.clone());
+                state_groups
+                    .entry(state.clone())
+                    .or_default()
+                    .push(manufacturer.clone());
             }
         }
 
@@ -342,7 +357,8 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
 
             // Upload state JSON slice
             let state_json_body = serde_json::to_string(&state_slice).unwrap();
-            s3_client.put_object()
+            s3_client
+                .put_object()
                 .bucket(&bucket)
                 .key(&state_json_key)
                 .body(state_json_body.into_bytes().into())
@@ -350,11 +366,14 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
                 .cache_control("public, max-age=31536000, immutable")
                 .send()
                 .await
-                .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload state JSON: {}", e)))?;
+                .map_err(|e| {
+                    lambda_runtime::Error::from(format!("Failed to upload state JSON: {}", e))
+                })?;
 
             // Upload state HTML page
             let state_html_body = HtmlTemplate::category_page(&state_slice);
-            s3_client.put_object()
+            s3_client
+                .put_object()
                 .bucket(&bucket)
                 .key(&state_html_key)
                 .body(state_html_body.into_bytes().into())
@@ -362,7 +381,9 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
                 .cache_control("public, max-age=60")
                 .send()
                 .await
-                .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload state HTML: {}", e)))?;
+                .map_err(|e| {
+                    lambda_runtime::Error::from(format!("Failed to upload state HTML: {}", e))
+                })?;
 
             rebuilt_slices.push(format!("{}/{} (JSON + HTML)", category, state));
         }
@@ -372,10 +393,11 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
     for manufacturer in &sample_manufacturers {
         let detail_key = format!("catalog/manufacturer/{}/index.html", manufacturer.id);
         let detail_json_key = format!("manufacturer/{}.json", manufacturer.id);
-        
+
         // Upload manufacturer JSON
         let mfg_json = serde_json::to_string(&manufacturer).unwrap();
-        s3_client.put_object()
+        s3_client
+            .put_object()
             .bucket(&bucket)
             .key(&detail_json_key)
             .body(mfg_json.into_bytes().into())
@@ -383,11 +405,14 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
             .cache_control("public, max-age=31536000, immutable")
             .send()
             .await
-            .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload manufacturer JSON: {}", e)))?;
+            .map_err(|e| {
+                lambda_runtime::Error::from(format!("Failed to upload manufacturer JSON: {}", e))
+            })?;
 
         // Upload manufacturer HTML
-        let detail_html = HtmlTemplate::manufacturer_detail(&manufacturer);
-        s3_client.put_object()
+        let detail_html = HtmlTemplate::manufacturer_detail(manufacturer);
+        s3_client
+            .put_object()
             .bucket(&bucket)
             .key(&detail_key)
             .body(detail_html.into_bytes().into())
@@ -395,13 +420,15 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
             .cache_control("public, max-age=60")
             .send()
             .await
-            .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload manufacturer HTML: {}", e)))?;
+            .map_err(|e| {
+                lambda_runtime::Error::from(format!("Failed to upload manufacturer HTML: {}", e))
+            })?;
 
         rebuilt_slices.push(format!("manufacturer/{} (JSON + HTML)", manufacturer.id));
     }
-    
+
     tracing::info!("Catalog rebuild completed. Rebuilt: {:?}", rebuilt_slices);
-    
+
     Ok(json!({
         "message": "Catalog rebuild completed",
         "rebuilt_slices": rebuilt_slices,

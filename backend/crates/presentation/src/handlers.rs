@@ -1,14 +1,14 @@
+use application::{
+    dto::*,
+    ports::{ImageService, ManufacturerRepository},
+    services::RfqService,
+};
 use axum::{
     extract::{Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::Json,
     routing::{get, post},
     Router,
-};
-use application::{
-    dto::*,
-    services::RfqService,
-    ports::{ManufacturerRepository, ImageService},
 };
 use domain::entities::*;
 use domain::value_objects::*;
@@ -19,6 +19,12 @@ use crate::error::{AppError, Result};
 
 /// RFQ handlers
 pub struct RfqHandlers;
+
+impl Default for RfqHandlers {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl RfqHandlers {
     pub fn new() -> Self {
@@ -43,11 +49,11 @@ impl RfqHandlers {
         tracing::info!("Creating RFQ for manufacturer {}", request.manufacturer_id);
 
         // Extract idempotency key from headers
-        let idempotency_key = headers
-            .get("idempotency-key")
-            .and_then(|h| h.to_str().ok());
+        let idempotency_key = headers.get("idempotency-key").and_then(|h| h.to_str().ok());
 
-        let response = service.create_rfq(request, idempotency_key).await
+        let response = service
+            .create_rfq(request, idempotency_key)
+            .await
             .map_err(AppError::from)?;
 
         Ok(Json(response))
@@ -60,7 +66,9 @@ impl RfqHandlers {
     ) -> Result<Json<RfqMeta>> {
         tracing::info!("Getting RFQ {}", rfq_id);
 
-        let rfq = service.get_rfq(&rfq_id).await
+        let rfq = service
+            .get_rfq(&rfq_id)
+            .await
             .map_err(AppError::from)?
             .ok_or_else(|| AppError::new(StatusCode::NOT_FOUND, "not_found", "RFQ not found"))?;
 
@@ -76,11 +84,14 @@ impl RfqHandlers {
         tracing::info!("Listing events for RFQ {}", rfq_id);
 
         let since = params.get("since").cloned();
-        let limit = params.get("limit")
+        let limit = params
+            .get("limit")
             .and_then(|s| s.parse().ok())
             .map(|l: u32| l.min(200)); // Cap at 200 as per design
 
-        let response = service.list_events(&rfq_id, since, limit).await
+        let response = service
+            .list_events(&rfq_id, since, limit)
+            .await
             .map_err(AppError::from)?;
 
         Ok(Json(response))
@@ -96,11 +107,11 @@ impl RfqHandlers {
         tracing::info!("Posting message to RFQ {}", rfq_id);
 
         // Extract idempotency key from headers
-        let idempotency_key = headers
-            .get("idempotency-key")
-            .and_then(|h| h.to_str().ok());
+        let idempotency_key = headers.get("idempotency-key").and_then(|h| h.to_str().ok());
 
-        let response = service.post_message(&rfq_id, request, idempotency_key).await
+        let response = service
+            .post_message(&rfq_id, request, idempotency_key)
+            .await
             .map_err(AppError::from)?;
 
         Ok((StatusCode::CREATED, Json(response)))
@@ -128,13 +139,15 @@ impl UploadHandlers {
         if request.tenant_id.is_empty() {
             return Err(AppError::bad_request("Tenant ID cannot be empty"));
         }
-        
+
         if request.content_type.is_empty() {
             return Err(AppError::bad_request("Content type cannot be empty"));
         }
-        
+
         if request.size_bytes == 0 || request.size_bytes > 15 * 1024 * 1024 {
-            return Err(AppError::bad_request("File size must be between 1 byte and 15MB"));
+            return Err(AppError::bad_request(
+                "File size must be between 1 byte and 15MB",
+            ));
         }
 
         // For MVP, create simple wrappers
@@ -149,7 +162,9 @@ impl UploadHandlers {
         let response = image_service
             .generate_presigned_upload_url(&tenant_id, &content_type, &file_size)
             .await
-            .map_err(|e| AppError::internal_server_error(&format!("Failed to generate upload URL: {}", e)))?;
+            .map_err(|e| {
+                AppError::internal_server_error(&format!("Failed to generate upload URL: {}", e))
+            })?;
 
         Ok(Json(response))
     }
@@ -171,17 +186,22 @@ impl ManufacturerHandlers {
         headers: HeaderMap,
         Json(request): Json<CreateManufacturerRequest>,
     ) -> Result<(StatusCode, Json<CreateManufacturerResponse>)> {
-        tracing::info!("Creating/updating manufacturer for tenant {}", request.tenant_id);
+        tracing::info!(
+            "Creating/updating manufacturer for tenant {}",
+            request.tenant_id
+        );
 
         // Check for authentication header (simplified for MVP)
         let _auth_header = headers
             .get("authorization")
             .and_then(|h| h.to_str().ok())
-            .ok_or_else(|| AppError::new(
-                StatusCode::UNAUTHORIZED,
-                "unauthorized",
-                "Missing authorization header",
-            ))?;
+            .ok_or_else(|| {
+                AppError::new(
+                    StatusCode::UNAUTHORIZED,
+                    "unauthorized",
+                    "Missing authorization header",
+                )
+            })?;
 
         // Convert DTO to domain entity
         let manufacturer = Manufacturer {
@@ -191,12 +211,12 @@ impl ManufacturerHandlers {
             description: request.description,
             location: request.location.map(|loc| Location {
                 city: loc.city,
-                state: loc.state, 
+                state: loc.state,
                 country: loc.country,
                 lat: loc.lat,
                 lng: loc.lng,
             }),
-            categories: request.capabilities.clone(),  // Using capabilities as categories for now
+            categories: request.capabilities.clone(), // Using capabilities as categories for now
             capabilities: Some(request.capabilities),
             contact_email: Some(request.contact_email),
             media: None, // Will be populated later via image uploads
@@ -218,8 +238,12 @@ impl ManufacturerHandlers {
             updated_at: manufacturer.updated_at,
         };
 
-        manufacturer_repo.save_manufacturer(&profile).await
-            .map_err(|e| AppError::internal_server_error(&format!("Failed to create manufacturer: {}", e)))?;
+        manufacturer_repo
+            .save_manufacturer(&profile)
+            .await
+            .map_err(|e| {
+                AppError::internal_server_error(&format!("Failed to create manufacturer: {}", e))
+            })?;
 
         let response = CreateManufacturerResponse {
             id: manufacturer.id.clone(),
@@ -239,16 +263,15 @@ pub async fn health_check() -> &'static str {
 pub fn create_app_router(
     rfq_service: Arc<RfqService>,
     image_service: Arc<dyn ImageService + Send + Sync>,
-    manufacturer_repo: Arc<dyn ManufacturerRepository + Send + Sync>
+    manufacturer_repo: Arc<dyn ManufacturerRepository + Send + Sync>,
 ) -> Router {
-    Router::new()
-        .route("/health", get(health_check))
-        .nest("/v1", 
-            Router::new()
-                .merge(RfqHandlers::router(rfq_service))
-                .merge(UploadHandlers::router(image_service))
-                .merge(ManufacturerHandlers::router(manufacturer_repo))
-        )
+    Router::new().route("/health", get(health_check)).nest(
+        "/v1",
+        Router::new()
+            .merge(RfqHandlers::router(rfq_service))
+            .merge(UploadHandlers::router(image_service))
+            .merge(ManufacturerHandlers::router(manufacturer_repo)),
+    )
 }
 
 #[derive(Debug, Serialize, Deserialize)]
