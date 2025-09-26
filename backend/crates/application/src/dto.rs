@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use domain::entities::*;
 use serde::{Deserialize, Serialize};
 

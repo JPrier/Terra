@@ -1,5 +1,5 @@
 [package]
-name = "api_uploads"
+name = "api_manufacturers"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,6 +21,4 @@ lambda_runtime = { workspace = true }
 lambda-web = { workspace = true }
 aws-config = { workspace = true }
 aws-sdk-s3 = { workspace = true }
-axum = { workspace = true }
-tower = { workspace = true }
 anyhow = { workspace = true }

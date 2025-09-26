@@ -1,4 +1,4 @@
-use jsonschema::{JSONSchema, ValidationError};
+use jsonschema::JSONSchema;
 use serde_json::Value;
 
 /// JSON schema validation utility
@@ -14,12 +14,18 @@ impl JsonValidator {
         Ok(Self { schema })
     }
     
-    pub fn validate(&self, instance: &Value) -> Result<(), Vec<ValidationError>> {
+    pub fn validate(&self, instance: &Value) -> Result<(), String> {
         let result = self.schema.validate(instance);
         
         match result {
             Ok(_) => Ok(()),
-            Err(errors) => Err(errors.collect()),
+            Err(errors) => {
+                let error_messages: Vec<String> = errors
+                    .into_iter()
+                    .map(|e| e.to_string())
+                    .collect();
+                Err(error_messages.join(", "))
+            }
         }
     }
 }

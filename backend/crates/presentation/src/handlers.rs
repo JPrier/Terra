@@ -9,10 +9,9 @@ use application::{
     dto::*,
     services::RfqService,
 };
-use domain::error::DomainError;
+use domain::entities::RfqMeta;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
-use uuid::Uuid;
 
 use crate::error::{AppError, Result};
 
@@ -145,7 +144,7 @@ impl ManufacturerHandlers {
     /// POST /v1/manufacturers - Create/update manufacturer (admin)
     async fn create_manufacturer(
         headers: HeaderMap,
-        Json(request): Json<CreateManufacturerRequest>,
+        Json(_request): Json<CreateManufacturerRequest>,
     ) -> Result<(StatusCode, Json<CreateManufacturerResponse>)> {
         tracing::info!("Creating/updating manufacturer");
 

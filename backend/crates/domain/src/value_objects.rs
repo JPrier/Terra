@@ -72,7 +72,7 @@ impl RfqId {
     }
     
     pub fn generate() -> Self {
-        let id = format!("r_{}", uuid::Uuid::new_v4().simple().to_string()[0..8].to_uppercase());
+        let id = format!("r_{}", &uuid::Uuid::new_v4().simple().to_string()[0..8].to_uppercase());
         RfqId(id)
     }
     
@@ -102,7 +102,7 @@ impl ManufacturerId {
     }
     
     pub fn generate() -> Self {
-        let id = format!("mfg_{}", uuid::Uuid::new_v4().simple().to_string()[0..8]);
+        let id = format!("mfg_{}", &uuid::Uuid::new_v4().simple().to_string()[0..8]);
         ManufacturerId(id)
     }
     

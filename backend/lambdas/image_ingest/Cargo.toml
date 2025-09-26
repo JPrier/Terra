@@ -1,5 +1,5 @@
 [package]
-name = "api_uploads"
+name = "image_ingest"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,16 +11,14 @@ path = "src/main.rs"
 domain = { path = "../../crates/domain" }
 application = { path = "../../crates/application" }
 infrastructure = { path = "../../crates/infrastructure" }
-presentation = { path = "../../crates/presentation" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 lambda_runtime = { workspace = true }
-lambda-web = { workspace = true }
 aws-config = { workspace = true }
 aws-sdk-s3 = { workspace = true }
-axum = { workspace = true }
-tower = { workspace = true }
 anyhow = { workspace = true }
+image = { workspace = true }
+fast_image_resize = { workspace = true }

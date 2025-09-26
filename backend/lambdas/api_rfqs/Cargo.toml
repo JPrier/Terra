@@ -18,8 +18,10 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 lambda_runtime = { workspace = true }
-lambda_web = { workspace = true }
+lambda-web = { workspace = true }
 aws-config = { workspace = true }
 aws-sdk-s3 = { workspace = true }
 aws-sdk-sesv2 = { workspace = true }
+axum = { workspace = true }
+tower = { workspace = true }
 anyhow = { workspace = true }

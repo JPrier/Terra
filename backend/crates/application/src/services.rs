@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use chrono::Utc;
 use domain::entities::*;
 use domain::events::*;
@@ -6,17 +5,10 @@ use domain::value_objects::*;
 use domain::error::{DomainError, Result};
 use std::sync::Arc;
 use uuid::Uuid;
+use sha2::Digest;
 
 use crate::dto::*;
 use crate::ports::*;
-
-pub mod rfq_service;
-pub mod manufacturer_service;
-pub mod upload_service;
-
-pub use rfq_service::*;
-pub use manufacturer_service::*;
-pub use upload_service::*;
 
 /// Main RFQ service for handling RFQ operations
 pub struct RfqService {
@@ -42,12 +34,6 @@ impl RfqService {
     }
 
     pub async fn create_rfq(&self, request: CreateRfqRequest, idempotency_key: Option<&str>) -> Result<CreateRfqResponse> {
-        // Validate input
-        let tenant_id = TenantId::new(request.tenant_id)?;
-        let manufacturer_id = ManufacturerId::new(request.manufacturer_id)?;
-        let buyer_email = Email::new(request.buyer.email)?;
-        let message_body = MessageBody::new(request.body.clone())?;
-
         // Check idempotency if key provided
         if let Some(key) = idempotency_key {
             let body_hash = self.compute_request_hash(&request)?;
@@ -56,6 +42,12 @@ impl RfqService {
                     .map_err(|_| DomainError::Internal("Failed to deserialize cached response".to_string()))?);
             }
         }
+
+        // Validate input
+        let tenant_id = TenantId::new(request.tenant_id.clone())?;
+        let manufacturer_id = ManufacturerId::new(request.manufacturer_id.clone())?;
+        let buyer_email = Email::new(request.buyer.email.clone())?;
+        let message_body = MessageBody::new(request.body.clone())?;
 
         // Verify manufacturer exists
         let manufacturer = self.manufacturer_repository.get_manufacturer(&manufacturer_id).await?
@@ -68,11 +60,11 @@ impl RfqService {
         // Create buyer contact
         let buyer = Contact {
             email: buyer_email.as_str().to_string(),
-            name: request.buyer.name,
+            name: request.buyer.name.clone(),
         };
 
         // Process attachments if any
-        let attachments = if let Some(attachment_dtos) = request.attachments {
+        let attachments = if let Some(attachment_dtos) = request.attachments.clone() {
             let mut processed_attachments = Vec::new();
             for attachment_dto in attachment_dtos {
                 let content_type = ContentType::new(attachment_dto.content_type)?;
@@ -206,7 +198,6 @@ impl RfqService {
 
     pub async fn post_message(&self, rfq_id: &str, request: PostMessageRequest, idempotency_key: Option<&str>) -> Result<PostMessageResponse> {
         let rfq_id = RfqId::new(rfq_id.to_string())?;
-        let message_body = MessageBody::new(request.body)?;
 
         // Check idempotency if key provided
         if let Some(key) = idempotency_key {
@@ -216,6 +207,8 @@ impl RfqService {
                     .map_err(|_| DomainError::Internal("Failed to deserialize cached response".to_string()))?);
             }
         }
+
+        let message_body = MessageBody::new(request.body.clone())?;
 
         // Verify RFQ exists
         let rfq_meta = self.rfq_repository.get_rfq_meta(&rfq_id).await?

@@ -1,7 +1,6 @@
 use axum::{
-    body::Body,
     extract::Request,
-    http::{HeaderMap, HeaderValue, Method},
+    http::{HeaderValue, Method},
     middleware::Next,
     response::Response,
 };
@@ -41,15 +40,6 @@ pub fn cors_layer() -> CorsLayer {
     CorsLayer::new()
         .allow_origin(Any) // TODO: Restrict to specific GitHub Pages domains
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
-        .allow_headers([
-            "content-type",
-            "authorization", 
-            "idempotency-key",
-            "x-request-id",
-            "if-none-match",
-        ])
-        .expose_headers([
-            "x-request-id",
-            "etag",
-        ])
+        .allow_headers(Any) // Simplified for MVP - use specific headers in production
+        .expose_headers(Any) // Simplified for MVP - use specific headers in production
 }
