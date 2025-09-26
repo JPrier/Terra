@@ -15,13 +15,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="card">
       <h3>Browse Manufacturers</h3>
       <p>Explore our directory of verified US manufacturers across all categories.</p>
-      <a href="/catalog/machining/" class="btn">Browse Now</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/machining/`} class="btn">Browse Now</a>
     </div>
 
     <div class="card">
       <h3>Submit an RFQ</h3>
       <p>Get quotes quickly by submitting your requirements directly to manufacturers.</p>
-      <a href="/catalog/machining/" class="btn btn-primary">Get Started</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/machining/`} class="btn btn-primary">Get Started</a>
     </div>
   </div>
 
@@ -47,9 +47,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <h3>Popular Categories</h3>
     <p>CNC Machining • 3D Printing • Injection Molding • Sheet Metal • Electronics • Fabrication</p>
     <div style="margin-top: 1rem;">
-      <a href="/catalog/machining/" class="btn" style="margin-right: 1rem;">CNC Machining</a>
-      <a href="/catalog/fabrication/" class="btn" style="margin-right: 1rem;">Sheet Metal</a>
-      <a href="/catalog/molding/" class="btn">Injection Molding</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/machining/`} class="btn" style="margin-right: 1rem;">CNC Machining</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/fabrication/`} class="btn" style="margin-right: 1rem;">Sheet Metal</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/molding/`} class="btn">Injection Molding</a>
     </div>
   </div>
 </BaseLayout>

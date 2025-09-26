@@ -1,4 +1,6 @@
 ---
+import '../styles/globals.css';
+
 export interface Props {
   title: string;
   description?: string;
@@ -13,9 +15,8 @@ const { title, description = "Terra - US Manufacturing Directory & RFQ Platform"
     <meta charset="UTF-8" />
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <title>{title}</title>
-    <link rel="stylesheet" href="/src/styles/globals.css">
   </head>
   <body>
     <header class="header">
@@ -23,8 +24,8 @@ const { title, description = "Terra - US Manufacturing Directory & RFQ Platform"
         <h1>Terra</h1>
         <p class="tagline">US Manufacturing Directory & RFQ Platform</p>
         <nav class="nav">
-          <a href="/">Home</a>
-          <a href="/catalog/machining/">Browse Manufacturers</a>
+          <a href={`${import.meta.env.BASE_URL}`}>Home</a>
+          <a href={`${import.meta.env.BASE_URL}catalog/machining/`}>Browse Manufacturers</a>
         </nav>
       </div>
     </header>

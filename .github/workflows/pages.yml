@@ -40,16 +40,16 @@ jobs:
 
       - name: Configure GitHub Pages
         id: pages
-        uses: actions/configure-pages@v3
+        uses: actions/configure-pages@v4
 
       - name: Build Astro site
         run: cd frontend && npm run build
         env:
           GITHUB_PAGES_URL: ${{ steps.pages.outputs.origin }}
-          GITHUB_PAGES_BASE: ${{ steps.pages.outputs.base_path }}
+          GITHUB_PAGES_BASE: ${{ steps.pages.outputs.base_path }}/
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./frontend/dist
 
@@ -62,4 +62,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
