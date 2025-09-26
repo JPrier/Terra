@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Terra - US Manufacturing Directory">
+  <section class="hero">
+    <h2>Connect with US Manufacturers</h2>
+    <p>
+      Find qualified manufacturers for your projects and submit RFQs directly.
+      Fast, reliable, and built for American manufacturing.
+    </p>
+  </section>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Browse Manufacturers</h3>
+      <p>Explore our directory of verified US manufacturers across all categories.</p>
+      <a href="/catalog/machining/" class="btn">Browse Now</a>
+    </div>
+
+    <div class="card">
+      <h3>Submit an RFQ</h3>
+      <p>Get quotes quickly by submitting your requirements directly to manufacturers.</p>
+      <a href="/catalog/machining/" class="btn btn-primary">Get Started</a>
+    </div>
+  </div>
+
+  <section class="features">
+    <h3>Why Choose Terra?</h3>
+    <div class="grid grid-3">
+      <div class="feature">
+        <h4>🇺🇸 US-Only</h4>
+        <p>All manufacturers are verified US-based companies</p>
+      </div>
+      <div class="feature">
+        <h4>⚡ Fast Quotes</h4>
+        <p>Get responses from manufacturers in hours, not days</p>
+      </div>
+      <div class="feature">
+        <h4>🔒 Secure</h4>
+        <p>Your projects and data are protected</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="card">
+    <h3>Popular Categories</h3>
+    <p>CNC Machining • 3D Printing • Injection Molding • Sheet Metal • Electronics • Fabrication</p>
+    <div style="margin-top: 1rem;">
+      <a href="/catalog/machining/" class="btn" style="margin-right: 1rem;">CNC Machining</a>
+      <a href="/catalog/fabrication/" class="btn" style="margin-right: 1rem;">Sheet Metal</a>
+      <a href="/catalog/molding/" class="btn">Injection Molding</a>
+    </div>
+  </div>
+</BaseLayout>

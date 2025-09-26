@@ -110,6 +110,8 @@ export class TerraStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       environment: {
         ENVIRONMENT: environment,
+        PUBLIC_BUCKET: publicBucket.bucketName,
+        PRIVATE_BUCKET: privateBucket.bucketName,
         FROM_EMAIL: 'noreply@terra-platform.com',
         RUST_LOG: 'info',
       },
@@ -125,6 +127,8 @@ export class TerraStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       environment: {
         ENVIRONMENT: environment,
+        PUBLIC_BUCKET: publicBucket.bucketName,
+        PRIVATE_BUCKET: privateBucket.bucketName,
         RUST_LOG: 'info',
       },
     });
@@ -139,6 +143,42 @@ export class TerraStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       environment: {
         ENVIRONMENT: environment,
+        PUBLIC_BUCKET: publicBucket.bucketName,
+        PRIVATE_BUCKET: privateBucket.bucketName,
+        RUST_LOG: 'info',
+      },
+    });
+
+    // Publisher Lambda for generating static HTML and JSON
+    const publisherLambda = new lambda.Function(this, 'PublisherLambda', {
+      runtime: lambda.Runtime.PROVIDED_AL2,
+      handler: 'bootstrap',
+      code: lambda.Code.fromAsset('../backend/lambdas/publisher'),
+      role: lambdaRole,
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 512,
+      architecture: lambda.Architecture.ARM_64,
+      environment: {
+        ENVIRONMENT: environment,
+        PUBLIC_BUCKET: publicBucket.bucketName,
+        PRIVATE_BUCKET: privateBucket.bucketName,
+        RUST_LOG: 'info',
+      },
+    });
+
+    // Image processing Lambda
+    const imageIngestLambda = new lambda.Function(this, 'ImageIngestLambda', {
+      runtime: lambda.Runtime.PROVIDED_AL2,
+      handler: 'bootstrap',
+      code: lambda.Code.fromAsset('../backend/lambdas/image_ingest'),
+      role: lambdaRole,
+      timeout: cdk.Duration.seconds(120),
+      memorySize: 1024,
+      architecture: lambda.Architecture.ARM_64,
+      environment: {
+        ENVIRONMENT: environment,
+        PUBLIC_BUCKET: publicBucket.bucketName,
+        PRIVATE_BUCKET: privateBucket.bucketName,
         RUST_LOG: 'info',
       },
     });
@@ -189,7 +229,12 @@ export class TerraStack extends cdk.Stack {
     const manufacturers = v1.addResource('manufacturers');
     manufacturers.addMethod('POST', new apigateway.LambdaIntegration(apiManufacturersLambda));
 
-    // CloudFront distribution for public assets
+    // Publisher trigger endpoint (admin)
+    const publisherResource = v1.addResource('publisher');
+    const publisherTriggerResource = publisherResource.addResource('trigger');
+    publisherTriggerResource.addMethod('POST', new apigateway.LambdaIntegration(publisherTrigger));
+
+    // CloudFront distribution for public assets and static catalog pages
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: new origins.S3Origin(publicBucket),
@@ -199,13 +244,80 @@ export class TerraStack extends cdk.Stack {
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
       },
       additionalBehaviors: {
+        // Catalog JSON files - long cache with immutable content
+        '/catalog/category/*': {
+          origin: new origins.S3Origin(publicBucket),
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+        '/manufacturer/*': {
+          origin: new origins.S3Origin(publicBucket),
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          responseHeadersPolicy: cloudfront.ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
+        },
+        // Static HTML catalog pages - shorter cache for faster updates
         '/catalog/*': {
+          origin: new origins.S3Origin(publicBucket),
+          cachePolicy: new cloudfront.CachePolicy(this, 'CatalogHtmlCachePolicy', {
+            cachePolicyName: `terra-catalog-html-${environment}`,
+            defaultTtl: cdk.Duration.minutes(5),
+            maxTtl: cdk.Duration.hours(1),
+            minTtl: cdk.Duration.seconds(0),
+          }),
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          compress: true,
+        },
+        // CSS and other assets
+        '/src/*': {
+          origin: new origins.S3Origin(publicBucket),
+          cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+          viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+          compress: true,
+        },
+        // Images and derived assets
+        '/tenants/*': {
           origin: new origins.S3Origin(publicBucket),
           cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
           viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         },
       },
     });
+
+    // Add a manual trigger for the publisher Lambda (for demo purposes)
+    const publisherTrigger = new lambda.Function(this, 'PublisherTriggerLambda', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+        const AWS = require('aws-sdk');
+        const lambda = new AWS.Lambda();
+        
+        exports.handler = async (event) => {
+          try {
+            const result = await lambda.invoke({
+              FunctionName: '${publisherLambda.functionName}',
+              InvocationType: 'Event',
+              Payload: JSON.stringify({ trigger: 'manual', timestamp: new Date().toISOString() })
+            }).promise();
+            
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Catalog rebuild triggered', result })
+            };
+          } catch (error) {
+            return {
+              statusCode: 500,
+              body: JSON.stringify({ error: error.message })
+            };
+          }
+        };
+      `),
+      timeout: cdk.Duration.seconds(30),
+    });
+
+    // Grant permissions for the trigger to invoke the publisher
+    publisherLambda.grantInvoke(publisherTrigger);
 
     // Outputs
     new cdk.CfnOutput(this, 'ApiUrl', {
