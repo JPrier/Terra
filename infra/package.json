@@ -1,0 +1,39 @@
+{
+  "name": "terra-infra",
+  "version": "0.1.0",
+  "description": "Terra Manufacturing Platform AWS Infrastructure",
+  "main": "lib/index.js",
+  "bin": {
+    "terra-infra": "bin/app.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "test": "jest",
+    "deploy": "npm run build && cdk deploy",
+    "synth": "npm run build && cdk synth",
+    "diff": "npm run build && cdk diff"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "@types/node": "20.6.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "~5.2.2",
+    "aws-cdk": "2.115.0"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.115.0",
+    "constructs": "^10.0.0"
+  },
+  "jest": {
+    "testMatch": [
+      "**/__tests__/**/*.ts",
+      "**/?(*.)+(spec|test).ts"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
+  }
+}
