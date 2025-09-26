@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use aws_sdk_sesv2::Client as SesClient;
 use domain::entities::*;
 use domain::events::*;
-use domain::error::{DomainError, Result};
+use domain::error::{Result};
 use application::ports::EmailService;
 use std::sync::Arc;
 

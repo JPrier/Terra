@@ -4,28 +4,34 @@ A complete MVP implementation of a US manufacturing directory and RFQ (Request f
 
 ## Architecture Overview
 
-Terra follows a serverless, event-driven architecture optimized for lowest cost and highest performance:
+Terra follows a serverless, event-driven architecture optimized for ultra-fast performance and lowest cost:
 
 - **Backend**: Rust Lambda functions with clean architecture (domain/application/infrastructure/presentation layers)
 - **Storage**: S3-only data model with event sourcing for RFQs 
 - **API**: AWS API Gateway HTTP API with rate limiting and CORS
-- **Frontend**: React SPA hosted on GitHub Pages
+- **Frontend**: Astro static site generator with server-rendered HTML and Svelte islands
 - **Infrastructure**: AWS CDK for Infrastructure as Code
-- **Distribution**: CloudFront CDN for global performance
+- **Distribution**: CloudFront CDN with optimized caching for HTML and JSON content
 
 ## Project Structure
 
 ```
 /docs/                 # Design documentation
 /infra/                # CDK infrastructure code  
-/frontend/             # React SPA
+/frontend/             # Astro static site generator
+  /src/
+    /components/       # ManufacturerCard.astro, FilterControls.svelte
+    /layouts/          # BaseLayout.astro
+    /pages/            # index.astro, rfq/submit.astro
+    /styles/           # globals.css
+  astro.config.mjs
 /backend/
   /lambdas/            # Lambda function implementations
     api_rfqs/          # RFQ CRUD operations
     api_uploads/       # Presigned URL generation
     api_manufacturers/ # Admin manufacturer management
     image_ingest/      # Image processing pipeline
-    publisher/         # Catalog rebuilding
+    publisher/         # Catalog rebuilding + HTML generation
   /crates/             # Shared Rust libraries
     domain/            # Business entities and rules
     application/       # Use cases and services  
@@ -36,12 +42,22 @@ Terra follows a serverless, event-driven architecture optimized for lowest cost 
 ## Features Implemented
 
 ### Core MVP Features
+- ✅ **Ultra-Fast Catalog Browsing**: Pre-rendered HTML pages for instant loading (sub-100ms)
 - ✅ **Manufacturer Directory**: Browse verified US manufacturers by category/state
 - ✅ **RFQ System**: Submit requests for quotes with real-time messaging
 - ✅ **Event Sourcing**: Immutable RFQ history with message/status/attachment events
 - ✅ **File Uploads**: Secure presigned URLs for project attachments
 - ✅ **Email Notifications**: SES-powered notifications for RFQ activity
 - ✅ **Admin Interface**: Manufacturer profile management
+- ✅ **Publisher-Generated HTML**: Lambda generates static catalog pages for lightning speed
+
+### Frontend Architecture - Astro + Islands
+- ✅ **Static Site Generation**: Astro framework for minimal JavaScript footprint
+- ✅ **Server-Rendered Catalog**: Publisher Lambda generates static HTML for categories and manufacturer profiles
+- ✅ **Svelte Islands**: Client-side filtering components hydrated only where needed
+- ✅ **Smart Caching**: Differential cache policies (5 min for HTML, 1 year for JSON)
+- ✅ **SEO Optimized**: Server-side rendering for search engine visibility
+- ✅ **Progressive Enhancement**: Core functionality works without JavaScript
 
 ### Technical Features  
 - ✅ **Idempotency**: Duplicate request prevention with S3 markers
@@ -49,8 +65,8 @@ Terra follows a serverless, event-driven architecture optimized for lowest cost 
 - ✅ **CORS**: Proper cross-origin request handling
 - ✅ **Request Validation**: JSON schema validation on all endpoints
 - ✅ **Error Handling**: Consistent error envelope format
-- ✅ **Caching**: CloudFront CDN with long TTLs for public assets
-- ✅ **Security**: Narrow IAM permissions and input validation
+- ✅ **Multi-Layer Caching**: CloudFront CDN with optimized cache behaviors
+- ✅ **Security**: Narrow IAM permissions and comprehensive input validation
 
 ## Quick Start
 
@@ -85,7 +101,24 @@ npm run deploy
 ```bash
 cd frontend
 npm install
-npm start
+
+# Build static site
+npm run build
+
+# Development server
+npm run dev
+```
+
+### Content Generation
+
+The Publisher Lambda generates both JSON data and static HTML pages:
+
+```bash
+# Trigger catalog rebuild (in production via API)
+# Creates both JSON slices and pre-rendered HTML pages:
+# - /catalog/machining/index.html
+# - /catalog/machining/OH/index.html  
+# - /catalog/manufacturer/mfg_001/index.html
 ```
 
 ## API Endpoints

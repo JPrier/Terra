@@ -4,6 +4,7 @@ use axum::{
 };
 use domain::error::DomainError;
 use serde_json::json;
+use std::fmt;
 
 /// HTTP error response following the design's error envelope
 pub struct AppError {
@@ -26,6 +27,43 @@ impl AppError {
     pub fn with_details(mut self, details: serde_json::Value) -> Self {
         self.details = Some(details);
         self
+    }
+
+    pub fn bad_request(message: &str) -> Self {
+        Self::new(StatusCode::BAD_REQUEST, "bad_request", message)
+    }
+
+    pub fn not_found(message: &str) -> Self {
+        Self::new(StatusCode::NOT_FOUND, "not_found", message)
+    }
+
+    pub fn internal_server_error(message: &str) -> Self {
+        Self::new(StatusCode::INTERNAL_SERVER_ERROR, "internal_error", message)
+    }
+
+    pub fn status_code(&self) -> StatusCode {
+        self.status
+    }
+}
+
+/// Convenience constructors
+impl AppError {
+    pub fn BadRequest(message: String) -> Self {
+        Self::bad_request(&message)
+    }
+
+    pub fn NotFound(message: String) -> Self {
+        Self::not_found(&message)
+    }
+
+    pub fn InternalServerError(message: String) -> Self {
+        Self::internal_server_error(&message)
+    }
+}
+
+impl fmt::Display for AppError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
     }
 }
 
