@@ -7,8 +7,8 @@ const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-do
 let manufacturers = [];
 
 try {
-  // Fetch catalog data for molding category
-  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/molding.json`);
+  // Fetch catalog data for additive category
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/additive.json`);
   if (response.ok) {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
@@ -16,21 +16,21 @@ try {
     // Fallback to new test data structure for development
     manufacturers = [
       {
-        id: "advanced-molding-systems",
-        name: "Advanced Molding Systems",
-        city: "Austin",
-        state: "TX",
+        id: "rapid-additive-solutions",
+        name: "Rapid Additive Solutions",
+        city: "Denver",
+        state: "CO",
         logoUrl: null,
-        categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
+        categories: ["3D Printing", "Additive Manufacturing", "Prototyping", "Low-Volume Production"],
         capabilities: [
-          "High-Volume Injection Molding",
-          "Multi-Cavity Tooling",
-          "Overmolding",
-          "Insert Molding",
-          "Medical Grade Materials",
-          "Clean Room Production",
-          "Secondary Operations",
-          "Assembly Services"
+          "SLA High-Resolution Printing",
+          "SLS Nylon Production",
+          "FDM Engineering Plastics",
+          "Metal 3D Printing (DMLS)",
+          "Post-Processing Services",
+          "Design for Additive",
+          "Rapid Prototyping",
+          "Bridge Manufacturing"
         ]
       }
     ];
@@ -40,35 +40,35 @@ try {
   // Fallback data with new enhanced manufacturer
   manufacturers = [
     {
-      id: "advanced-molding-systems",
-      name: "Advanced Molding Systems",
-      city: "Austin",
-      state: "TX",
+      id: "rapid-additive-solutions",
+      name: "Rapid Additive Solutions",
+      city: "Denver",
+      state: "CO",
       logoUrl: null,
-      categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
+      categories: ["3D Printing", "Additive Manufacturing", "Prototyping", "Low-Volume Production"],
       capabilities: [
-        "High-Volume Injection Molding",
-        "Multi-Cavity Tooling",
-        "Overmolding",
-        "Insert Molding",
-        "Medical Grade Materials",
-        "Clean Room Production",
-        "Secondary Operations",
-        "Assembly Services"
+        "SLA High-Resolution Printing",
+        "SLS Nylon Production",
+        "FDM Engineering Plastics",
+        "Metal 3D Printing (DMLS)",
+        "Post-Processing Services",
+        "Design for Additive",
+        "Rapid Prototyping",
+        "Bridge Manufacturing"
       ]
     }
   ];
 }
 ---
 
-<BaseLayout title="Injection Molding Manufacturers - Terra">
+<BaseLayout title="3D Printing & Additive Manufacturing - Terra">
   <section class="hero">
-    <h2>Injection Molding Manufacturers</h2>
-    <p>Find trusted US injection molding manufacturers for your plastic part production needs.</p>
+    <h2>3D Printing & Additive Manufacturing</h2>
+    <p>Find advanced additive manufacturing and 3D printing services for rapid prototyping and low-volume production.</p>
   </section>
 
   <div class="catalog-stats">
-    <p><strong>{manufacturers.length}</strong> verified manufacturers in Injection Molding</p>
+    <p><strong>{manufacturers.length}</strong> verified manufacturers in 3D Printing & Additive Manufacturing</p>
   </div>
 
   <div class="manufacturer-grid">

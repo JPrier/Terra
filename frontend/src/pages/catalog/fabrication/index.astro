@@ -2,45 +2,63 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
 
-// Sample manufacturers for Sheet Metal/Fabrication category
-const manufacturers = [
-  {
-    id: "american-sheet-metal",
-    name: "American Sheet Metal Works",
-    city: "Pittsburgh",
-    state: "PA",
-    logoUrl: null,
-    categories: ["Sheet Metal", "Fabrication", "Welding"],
-    capabilities: ["Laser Cutting", "Forming", "Welding", "Powder Coating"]
-  },
-  {
-    id: "midwest-fabrication",
-    name: "Midwest Fabrication Inc", 
-    city: "Milwaukee",
-    state: "WI",
-    logoUrl: null,
-    categories: ["Fabrication", "Sheet Metal", "Assembly"],
-    capabilities: ["Plasma Cutting", "Press Brake", "TIG Welding", "Custom Assembly"]
-  },
-  {
-    id: "precision-metal-fab",
-    name: "Precision Metal Fabricators",
-    city: "Houston",
-    state: "TX", 
-    logoUrl: null,
-    categories: ["Sheet Metal", "Precision Fabrication"],
-    capabilities: ["Waterjet Cutting", "CNC Punching", "Stainless Steel", "Aluminum"]
-  },
-  {
-    id: "coastal-fabrication",
-    name: "Coastal Fabrication LLC",
-    city: "Norfolk",
-    state: "VA", 
-    logoUrl: null,
-    categories: ["Marine Fabrication", "Sheet Metal", "Structural Steel"],
-    capabilities: ["Heavy Fabrication", "Marine Grade Materials", "Large Scale Projects"]
+// Fetch manufacturer data from S3 (CDK deployed test data)
+const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
+let manufacturers = [];
+
+try {
+  // Fetch catalog data for fabrication category
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/fabrication.json`);
+  if (response.ok) {
+    const catalogData = await response.json();
+    manufacturers = catalogData.manufacturers || [];
+  } else {
+    // Fallback to new test data structure for development
+    manufacturers = [
+      {
+        id: "industrial-metal-fabricators",
+        name: "Industrial Metal Fabricators",
+        city: "Pittsburgh",
+        state: "PA",
+        logoUrl: null,
+        categories: ["Sheet Metal", "Fabrication", "Welding", "Industrial Equipment"],
+        capabilities: [
+          "Laser Cutting up to 1\" Steel",
+          "Press Brake Forming",
+          "TIG/MIG Welding",
+          "Powder Coating",
+          "CNC Punching",
+          "Assembly Services",
+          "Heavy Fabrication",
+          "Custom Enclosures"
+        ]
+      }
+    ];
   }
-];
+} catch (error) {
+  console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
+  // Fallback data with new enhanced manufacturer
+  manufacturers = [
+    {
+      id: "industrial-metal-fabricators",
+      name: "Industrial Metal Fabricators",
+      city: "Pittsburgh",
+      state: "PA",
+      logoUrl: null,
+      categories: ["Sheet Metal", "Fabrication", "Welding", "Industrial Equipment"],
+      capabilities: [
+        "Laser Cutting up to 1\" Steel",
+        "Press Brake Forming",
+        "TIG/MIG Welding",
+        "Powder Coating",
+        "CNC Punching",
+        "Assembly Services",
+        "Heavy Fabrication",
+        "Custom Enclosures"
+      ]
+    }
+  ];
+}
 ---
 
 <BaseLayout title="Sheet Metal & Fabrication Manufacturers - Terra">

@@ -7,8 +7,8 @@ const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-do
 let manufacturers = [];
 
 try {
-  // Fetch catalog data for molding category
-  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/molding.json`);
+  // Fetch catalog data for electronics category
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/electronics.json`);
   if (response.ok) {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
@@ -16,21 +16,21 @@ try {
     // Fallback to new test data structure for development
     manufacturers = [
       {
-        id: "advanced-molding-systems",
-        name: "Advanced Molding Systems",
-        city: "Austin",
-        state: "TX",
+        id: "precision-electronics-assembly",
+        name: "Precision Electronics Assembly",
+        city: "San Jose",
+        state: "CA",
         logoUrl: null,
-        categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
+        categories: ["Electronics Assembly", "PCB Assembly", "Contract Manufacturing", "Testing"],
         capabilities: [
-          "High-Volume Injection Molding",
-          "Multi-Cavity Tooling",
-          "Overmolding",
-          "Insert Molding",
-          "Medical Grade Materials",
-          "Clean Room Production",
-          "Secondary Operations",
-          "Assembly Services"
+          "Surface Mount Technology (SMT)",
+          "Through-Hole Assembly",
+          "Mixed Technology PCBs",
+          "BGA/μBGA Assembly",
+          "Functional Testing",
+          "Box Build Assembly",
+          "Cable Assembly",
+          "Quality Inspection (AOI/X-ray)"
         ]
       }
     ];
@@ -40,35 +40,35 @@ try {
   // Fallback data with new enhanced manufacturer
   manufacturers = [
     {
-      id: "advanced-molding-systems",
-      name: "Advanced Molding Systems",
-      city: "Austin",
-      state: "TX",
+      id: "precision-electronics-assembly",
+      name: "Precision Electronics Assembly",
+      city: "San Jose",
+      state: "CA",
       logoUrl: null,
-      categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
+      categories: ["Electronics Assembly", "PCB Assembly", "Contract Manufacturing", "Testing"],
       capabilities: [
-        "High-Volume Injection Molding",
-        "Multi-Cavity Tooling",
-        "Overmolding",
-        "Insert Molding",
-        "Medical Grade Materials",
-        "Clean Room Production",
-        "Secondary Operations",
-        "Assembly Services"
+        "Surface Mount Technology (SMT)",
+        "Through-Hole Assembly",
+        "Mixed Technology PCBs",
+        "BGA/μBGA Assembly",
+        "Functional Testing",
+        "Box Build Assembly",
+        "Cable Assembly",
+        "Quality Inspection (AOI/X-ray)"
       ]
     }
   ];
 }
 ---
 
-<BaseLayout title="Injection Molding Manufacturers - Terra">
+<BaseLayout title="Electronics Assembly & PCB Manufacturing - Terra">
   <section class="hero">
-    <h2>Injection Molding Manufacturers</h2>
-    <p>Find trusted US injection molding manufacturers for your plastic part production needs.</p>
+    <h2>Electronics Assembly & PCB Manufacturing</h2>
+    <p>Find trusted electronics contract manufacturers for PCB assembly, testing, and box build services.</p>
   </section>
 
   <div class="catalog-stats">
-    <p><strong>{manufacturers.length}</strong> verified manufacturers in Injection Molding</p>
+    <p><strong>{manufacturers.length}</strong> verified manufacturers in Electronics Assembly & PCB Manufacturing</p>
   </div>
 
   <div class="manufacturer-grid">

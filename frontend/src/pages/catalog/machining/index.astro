@@ -2,36 +2,66 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
 
-// Sample manufacturers for CNC Machining category
-const manufacturers = [
-  {
-    id: "precision-parts-co",
-    name: "Precision Parts Co",
-    city: "Detroit",
-    state: "MI",
-    logoUrl: null,
-    categories: ["CNC Machining", "Precision Manufacturing"],
-    capabilities: ["5-axis CNC", "Aluminum", "Steel", "Prototype to Production"]
-  },
-  {
-    id: "midwest-machining",
-    name: "Midwest Machining Solutions", 
-    city: "Chicago",
-    state: "IL",
-    logoUrl: null,
-    categories: ["CNC Machining", "Turning", "Milling"],
-    capabilities: ["CNC Turning", "CNC Milling", "Aerospace Grade", "ISO 9001"]
-  },
-  {
-    id: "advanced-cnc-systems",
-    name: "Advanced CNC Systems",
-    city: "Cleveland",
-    state: "OH", 
-    logoUrl: null,
-    categories: ["CNC Machining", "Custom Manufacturing"],
-    capabilities: ["3-axis CNC", "4-axis CNC", "Titanium", "Medical Device Manufacturing"]
+// Fetch manufacturer data from S3 (CDK deployed test data)
+// In production, this would be fetched from the CDK-deployed S3 bucket
+// For now, we'll use the new comprehensive manufacturer data structure
+
+const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
+let manufacturers = [];
+
+try {
+  // Fetch catalog data for machining category
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/machining.json`);
+  if (response.ok) {
+    const catalogData = await response.json();
+    manufacturers = catalogData.manufacturers || [];
+  } else {
+    // Fallback to new test data structure for development
+    manufacturers = [
+      {
+        id: "precision-aerospace-cnc",
+        name: "Precision Aerospace CNC",
+        city: "Seattle",
+        state: "WA",
+        logoUrl: null,
+        categories: ["CNC Machining", "Aerospace", "Precision Manufacturing"],
+        capabilities: [
+          "5-axis CNC Machining",
+          "Titanium Alloys",
+          "Aluminum 7075",
+          "Stainless Steel 316L",
+          "AS9100 Certified",
+          "Prototype to Production",
+          "Tight Tolerances ±0.0005\"",
+          "Complex Geometries"
+        ]
+      }
+    ];
   }
-];
+} catch (error) {
+  console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
+  // Fallback data with new enhanced manufacturer
+  manufacturers = [
+    {
+      id: "precision-aerospace-cnc",
+      name: "Precision Aerospace CNC",
+      city: "Seattle",
+      state: "WA",
+      logoUrl: null,
+      categories: ["CNC Machining", "Aerospace", "Precision Manufacturing"],
+      capabilities: [
+        "5-axis CNC Machining",
+        "Titanium Alloys",
+        "Aluminum 7075",
+        "Stainless Steel 316L",
+        "AS9100 Certified",
+        "Prototype to Production",
+        "Tight Tolerances ±0.0005\"",
+        "Complex Geometries"
+      ]
+    }
+  ];
+}
 ---
 
 <BaseLayout title="CNC Machining Manufacturers - Terra">
