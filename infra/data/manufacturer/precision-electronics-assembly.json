@@ -1,0 +1,38 @@
+{
+  "id": "precision-electronics-assembly",
+  "name": "Precision Electronics Assembly",
+  "city": "San Jose",
+  "state": "CA",
+  "categories": [
+    "Electronics Assembly",
+    "PCB Assembly",
+    "Contract Manufacturing",
+    "Testing"
+  ],
+  "capabilities": [
+    "Surface Mount Technology (SMT)",
+    "Through-Hole Assembly",
+    "Mixed Technology PCBs",
+    "BGA/μBGA Assembly",
+    "Functional Testing",
+    "Box Build Assembly",
+    "Cable Assembly",
+    "Quality Inspection (AOI/X-ray)"
+  ],
+  "description": "Premier electronics contract manufacturer in Silicon Valley serving high-tech, medical, and aerospace industries. IPC-610 Class 3 certified facility with advanced SMT lines, automated optical inspection, and comprehensive testing capabilities. Expertise in complex mixed-technology PCBs, rigid-flex assemblies, and full box-build services.",
+  "contact_email": "sales@precision-ems.com",
+  "certifications": [
+    "IPC-610 Class 3",
+    "ISO 9001",
+    "ISO 13485",
+    "ITAR Registered"
+  ],
+  "materials": [
+    "FR4 PCBs",
+    "Flex Circuits",
+    "Ceramic Substrates",
+    "Components 0201-BGA"
+  ],
+  "min_order_quantity": "10 to 100K+ units",
+  "lead_time_weeks": "2-8 weeks"
+}

@@ -1,0 +1,29 @@
+{
+  "category": "molding",
+  "name": "Injection Molding",
+  "description": "Plastic injection molding and manufacturing",
+  "count": 1,
+  "manufacturers": [
+    {
+      "id": "advanced-molding-systems",
+      "name": "Advanced Molding Systems",
+      "city": "Austin",
+      "state": "TX",
+      "categories": [
+        "Injection Molding",
+        "Plastics",
+        "Consumer Electronics"
+      ],
+      "capabilities": [
+        "High-Volume Injection Molding",
+        "Multi-Cavity Tooling",
+        "Overmolding",
+        "Insert Molding",
+        "Medical Grade Materials",
+        "Clean Room Production",
+        "Secondary Operations",
+        "Assembly Services"
+      ]
+    }
+  ]
+}

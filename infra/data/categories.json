@@ -1,0 +1,27 @@
+{
+  "machining": {
+    "name": "CNC Machining",
+    "description": "Precision CNC machining and manufacturing services",
+    "manufacturer_ids": ["precision-aerospace-cnc"]
+  },
+  "molding": {
+    "name": "Injection Molding",
+    "description": "Plastic injection molding and manufacturing",
+    "manufacturer_ids": ["advanced-molding-systems"]
+  },
+  "fabrication": {
+    "name": "Sheet Metal & Fabrication", 
+    "description": "Metal fabrication and sheet metal services",
+    "manufacturer_ids": ["industrial-metal-fabricators"]
+  },
+  "additive": {
+    "name": "3D Printing & Additive",
+    "description": "Additive manufacturing and 3D printing services",
+    "manufacturer_ids": ["rapid-additive-solutions"]
+  },
+  "electronics": {
+    "name": "Electronics Assembly",
+    "description": "PCB assembly and electronics manufacturing services",
+    "manufacturer_ids": ["precision-electronics-assembly"]
+  }
+}

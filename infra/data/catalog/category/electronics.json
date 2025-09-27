@@ -1,0 +1,30 @@
+{
+  "category": "electronics",
+  "name": "Electronics Assembly",
+  "description": "PCB assembly and electronics manufacturing services",
+  "count": 1,
+  "manufacturers": [
+    {
+      "id": "precision-electronics-assembly",
+      "name": "Precision Electronics Assembly",
+      "city": "San Jose",
+      "state": "CA",
+      "categories": [
+        "Electronics Assembly",
+        "PCB Assembly",
+        "Contract Manufacturing",
+        "Testing"
+      ],
+      "capabilities": [
+        "Surface Mount Technology (SMT)",
+        "Through-Hole Assembly",
+        "Mixed Technology PCBs",
+        "BGA/μBGA Assembly",
+        "Functional Testing",
+        "Box Build Assembly",
+        "Cable Assembly",
+        "Quality Inspection (AOI/X-ray)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "id": "rapid-additive-solutions",
+  "name": "Rapid Additive Solutions",
+  "city": "Denver",
+  "state": "CO",
+  "categories": [
+    "3D Printing",
+    "Additive Manufacturing",
+    "Prototyping",
+    "Low-Volume Production"
+  ],
+  "capabilities": [
+    "SLA High-Resolution Printing",
+    "SLS Nylon Production",
+    "FDM Engineering Plastics",
+    "Metal 3D Printing (DMLS)",
+    "Post-Processing Services",
+    "Design for Additive",
+    "Rapid Prototyping",
+    "Bridge Manufacturing"
+  ],
+  "description": "Cutting-edge additive manufacturing facility with 20+ industrial 3D printers including metal DMLS systems. Specializes in rapid prototyping, low-volume production, and complex geometries impossible with traditional manufacturing. Serving aerospace, medical, automotive, and consumer product industries with same-day to 2-week turnarounds.",
+  "contact_email": "orders@rapid-additive.com",
+  "certifications": [
+    "ISO 9001",
+    "AS9100 (in progress)"
+  ],
+  "materials": [
+    "PLA",
+    "ABS",
+    "PETG",
+    "Nylon PA12",
+    "Titanium Ti64",
+    "Aluminum AlSi10Mg",
+    "Stainless 316L"
+  ],
+  "min_order_quantity": "1 to 500 units",
+  "lead_time_weeks": "0.1-2 weeks"
+}
