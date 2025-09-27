@@ -47,6 +47,7 @@ jobs:
         env:
           GITHUB_PAGES_URL: ${{ steps.pages.outputs.origin }}
           GITHUB_PAGES_BASE: ${{ steps.pages.outputs.base_path }}/
+          ASTRO_TELEMETRY_DISABLED: 1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

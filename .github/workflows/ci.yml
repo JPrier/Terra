@@ -10,6 +10,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  ASTRO_TELEMETRY_DISABLED: 1
 
 jobs:
   test:
@@ -87,3 +88,5 @@ jobs:
 
       - name: Build frontend
         run: cd frontend && npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1

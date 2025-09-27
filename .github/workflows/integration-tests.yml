@@ -9,6 +9,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  ASTRO_TELEMETRY_DISABLED: 1
 
 jobs:
   integration-tests:
@@ -71,6 +72,8 @@ jobs:
         run: |
           cd frontend
           npm run build
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
 
       - name: Run CI validation
         run: ./validate-ci-setup.sh
@@ -79,21 +82,52 @@ jobs:
         run: |
           cd frontend
           # Start a simple dev server for testing
-          npm run dev &
+          echo "Starting Astro dev server..."
+          ASTRO_TELEMETRY_DISABLED=1 npm run dev > ../astro-server.log 2>&1 &
           SERVER_PID=$!
           
-          # Wait for server to start
-          timeout 30 sh -c 'until curl -s http://localhost:4321; do sleep 2; done'
+          # Wait for server to start with better error handling
+          echo "Waiting for Astro dev server to start..."
+          for i in {1..15}; do
+            if curl -s http://localhost:4321 > /dev/null 2>&1; then
+              echo "✅ Server is ready after $i attempts"
+              break
+            fi
+            if [ $i -eq 15 ]; then
+              echo "❌ Server failed to start after 15 attempts"
+              echo "Server logs:"
+              cat ../astro-server.log || echo "No logs found"
+              kill $SERVER_PID || true
+              exit 1
+            fi
+            echo "⏳ Attempt $i failed, waiting 2 seconds..."
+            sleep 2
+          done
           
           # Run basic frontend tests
           cd ../tests
-          npx playwright test tests/homepage.spec.js --project=chromium --timeout=30000
+          echo "Testing basic page load..."
+          curl -s http://localhost:4321 | head -5 || echo "Failed to fetch page"
+          
+          echo "Running Playwright tests..."
+          npx playwright test tests/homepage.spec.js --project=chromium --timeout=30000 --reporter=line || TEST_RESULT=$?
           
           # Cleanup
+          echo "Cleaning up server..."
           kill $SERVER_PID || true
+          sleep 2
+          
+          # Show server logs if tests failed
+          if [ "${TEST_RESULT:-0}" -ne 0 ]; then
+            echo "Test failed, showing server logs:"
+            cat ../astro-server.log || echo "No logs found"
+          fi
+          
+          exit ${TEST_RESULT:-0}
         env:
           BASE_URL: http://localhost:4321
           CI: true
+          ASTRO_TELEMETRY_DISABLED: 1
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

@@ -42,7 +42,7 @@ else
 fi
 
 log "3️⃣ Testing frontend build..."
-if npm run build > /dev/null 2>&1; then
+if ASTRO_TELEMETRY_DISABLED=1 npm run build > /dev/null 2>&1; then
     success "Frontend builds successfully"
 else
     error "Frontend build failed"
