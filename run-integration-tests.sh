@@ -79,11 +79,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Cleanup function
+    # Cleanup function
 cleanup() {
     if [[ "$CLEANUP" == "true" ]]; then
         log "Cleaning up Docker containers..."
-        docker-compose -f docker-compose.test.yml down --volumes --remove-orphans >/dev/null 2>&1 || true
+        docker compose -f docker compose.test.yml down --volumes --remove-orphans >/dev/null 2>&1 || true
         success "Cleanup completed"
     else
         warn "Skipping cleanup (use --no-cleanup flag to keep containers running)"
@@ -106,7 +106,7 @@ main() {
         exit 1
     fi
     
-    if ! command -v docker-compose &> /dev/null; then
+    if ! docker compose version &> /dev/null; then
         error "Docker Compose is required but not installed"
         exit 1
     fi
@@ -116,7 +116,7 @@ main() {
     # Build Docker images (unless skipped)
     if [[ "$SKIP_BUILD" != "true" ]]; then
         log "Building Docker images..."
-        docker-compose -f docker-compose.test.yml build --parallel
+        docker compose -f docker compose.test.yml build --parallel
         success "Docker images built successfully"
     else
         warn "Skipping Docker image build"
@@ -124,7 +124,7 @@ main() {
     
     # Start services
     log "Starting test infrastructure..."
-    docker-compose -f docker-compose.test.yml up -d localstack
+    docker compose -f docker compose.test.yml up -d localstack
     
     # Wait for LocalStack to be ready
     log "Waiting for LocalStack to be ready..."
@@ -149,7 +149,7 @@ main() {
     
     # Start backend services  
     log "Starting backend services..."
-    docker-compose -f docker-compose.test.yml up -d api-uploads api-manufacturers api-rfqs
+    docker compose -f docker compose.test.yml up -d api-uploads api-manufacturers api-rfqs
     
     # Wait for backend services
     log "Waiting for backend services..."
@@ -172,7 +172,7 @@ main() {
     
     # Start frontend
     log "Starting frontend..."
-    docker-compose -f docker-compose.test.yml up -d frontend
+    docker compose -f docker compose.test.yml up -d frontend
     
     # Wait for frontend
     log "Waiting for frontend..."
