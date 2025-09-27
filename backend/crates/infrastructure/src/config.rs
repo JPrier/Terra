@@ -26,14 +26,14 @@ impl Config {
     /// Create AWS config with optional endpoint override for LocalStack
     pub async fn create_aws_config(&self) -> aws_config::SdkConfig {
         use aws_config::BehaviorVersion;
-        
+
         let mut config_loader = aws_config::defaults(BehaviorVersion::latest());
-        
+
         // Override endpoint for LocalStack if specified
         if let Some(endpoint_url) = &self.aws_endpoint_url {
             config_loader = config_loader.endpoint_url(endpoint_url.clone());
         }
-        
+
         config_loader.load().await
     }
 }
