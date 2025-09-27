@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ManufacturerCard from '../../../components/ManufacturerCard.astro';
+
+// Sample manufacturers for Injection Molding category
+const manufacturers = [
+  {
+    id: "american-plastics-molding",
+    name: "American Plastics & Molding",
+    city: "Grand Rapids",
+    state: "MI",
+    logoUrl: null,
+    categories: ["Injection Molding", "Plastic Manufacturing"],
+    capabilities: ["High Volume Production", "Multi-cavity Molds", "Over-molding", "Insert Molding"]
+  },
+  {
+    id: "precision-molding-solutions",
+    name: "Precision Molding Solutions", 
+    city: "Charlotte",
+    state: "NC",
+    logoUrl: null,
+    categories: ["Injection Molding", "Tool & Die", "Prototype"],
+    capabilities: ["Rapid Prototyping", "Low Volume Production", "Medical Grade Plastics", "Clean Room Manufacturing"]
+  },
+  {
+    id: "midwest-injection-molding",
+    name: "Midwest Injection Molding Co",
+    city: "Cincinnati",
+    state: "OH", 
+    logoUrl: null,
+    categories: ["Injection Molding", "Assembly"],
+    capabilities: ["Automotive Parts", "Consumer Products", "Two-shot Molding", "Secondary Operations"]
+  }
+];
+---
+
+<BaseLayout title="Injection Molding Manufacturers - Terra">
+  <section class="hero">
+    <h2>Injection Molding Manufacturers</h2>
+    <p>Find trusted US injection molding manufacturers for your plastic part production needs.</p>
+  </section>
+
+  <div class="catalog-stats">
+    <p><strong>{manufacturers.length}</strong> verified manufacturers in Injection Molding</p>
+  </div>
+
+  <div class="manufacturer-grid">
+    {manufacturers.map(manufacturer => (
+      <ManufacturerCard manufacturer={manufacturer} />
+    ))}
+  </div>
+
+  <div class="cta-section">
+    <div class="card">
+      <h3>Don't see what you need?</h3>
+      <p>Submit an RFQ and we'll connect you with the right manufacturers for your project.</p>
+      <a href={`${import.meta.env.BASE_URL}rfq/submit`} class="btn btn-primary">Submit RFQ</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .catalog-stats {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .manufacturer-grid {
+    display: grid;
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .cta-section {
+    margin-top: 3rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .manufacturer-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
