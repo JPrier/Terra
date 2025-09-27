@@ -95,7 +95,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         
         // In production, redirect to RFQ detail page
         setTimeout(() => {
-          window.location.href = '/';
+          window.location.href = import.meta.env.BASE_URL || '/';
         }, 5000);
         
       } catch (error) {
