@@ -1,0 +1,19 @@
+{
+  "name": "terra-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end integration tests for Terra platform",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "setup": "node setup-test-data.js"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.40.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  }
+}

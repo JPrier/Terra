@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  # LocalStack for AWS service mocking
+  localstack:
+    container_name: terra-localstack
+    image: localstack/localstack:3.0
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3,ses
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LS_LOG=debug
+      - PERSISTENCE=0
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API services 
+  api-uploads:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api-uploads
+    ports:
+      - "3000:3000"
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PUBLIC_BUCKET=app-public-test
+      - PRIVATE_BUCKET=app-private-test
+      - RUST_LOG=debug
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-manufacturers:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api-manufacturers
+    ports:
+      - "3002:3002"
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PUBLIC_BUCKET=app-public-test
+      - PRIVATE_BUCKET=app-private-test
+      - RUST_LOG=debug
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-rfqs:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.api-rfqs
+    ports:
+      - "3001:3001"
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PUBLIC_BUCKET=app-public-test
+      - PRIVATE_BUCKET=app-private-test
+      - SES_FROM_EMAIL=test@terra.local
+      - RUST_LOG=debug
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend development server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "4321:4321"
+    environment:
+      - API_BASE_URL=http://localhost:3001
+      - UPLOADS_API_URL=http://localhost:3000
+      - MANUFACTURERS_API_URL=http://localhost:3002
+    depends_on:
+      - api-rfqs
+      - api-uploads
+      - api-manufacturers
+    volumes:
+      - ./frontend/src:/app/src:ro
+
+  # Test runner
+  test-runner:
+    build:
+      context: ./tests
+      dockerfile: Dockerfile
+    volumes:
+      - ./tests:/tests
+      - ./test-results:/test-results
+    environment:
+      - BASE_URL=http://frontend:4321
+      - API_BASE_URL=http://api-rfqs:3001
+    depends_on:
+      - frontend
+      - api-rfqs
+      - api-uploads
+      - api-manufacturers
+    command: ["npm", "test"]

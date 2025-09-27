@@ -34,17 +34,11 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, Error> {
     tracing::info!("Processing manufacturer API request: {:?}", event);
 
     // Set up AWS clients
-    let region_provider =
-        aws_config::meta::region::RegionProviderChain::default_provider().or_else("us-east-1");
-    let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
-        .region(region_provider)
-        .load()
-        .await;
-
-    let s3_client = S3Client::new(&config);
+    let app_config = Arc::new(Config::from_env());
+    let aws_config = app_config.create_aws_config().await;
+    let s3_client = S3Client::new(&aws_config);
 
     // Create services
-    let app_config = Arc::new(Config::from_env());
     let _manufacturer_repo = Arc::new(S3ManufacturerRepository::new(s3_client, app_config.clone()));
 
     // For now, return a success response indicating the service is ready
@@ -65,15 +59,9 @@ async fn local_server() -> Result<(), Error> {
     tracing::info!("Starting manufacturer API server on http://0.0.0.0:3002");
 
     // Set up AWS clients for local development
-    let region_provider =
-        aws_config::meta::region::RegionProviderChain::default_provider().or_else("us-east-1");
-    let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
-        .region(region_provider)
-        .load()
-        .await;
-
-    let s3_client = S3Client::new(&config);
     let app_config = Arc::new(Config::from_env());
+    let aws_config = app_config.create_aws_config().await;
+    let s3_client = S3Client::new(&aws_config);
     let manufacturer_repo = Arc::new(S3ManufacturerRepository::new(s3_client, app_config.clone()));
 
     // Create router

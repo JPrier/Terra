@@ -1,5 +1,4 @@
 use application::services::RfqService;
-use aws_config::BehaviorVersion;
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_sesv2::Client as SesClient;
 use infrastructure::{
@@ -82,11 +81,11 @@ async fn create_services() -> Result<
 > {
     use application::ports::{ImageService, ManufacturerRepository};
     use infrastructure::s3::S3ImageService;
-    // Create AWS clients
-    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    // Create configuration and AWS clients
+    let config = Arc::new(Config::from_env());
+    let aws_config = config.create_aws_config().await;
     let s3_client = S3Client::new(&aws_config);
     let ses_client = SesClient::new(&aws_config);
-    let config = Arc::new(Config::from_env());
 
     // Create repositories and services
     let rfq_repository = Arc::new(S3RfqRepository::new(s3_client.clone(), config.clone()));
