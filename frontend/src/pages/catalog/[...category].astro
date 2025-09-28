@@ -1,0 +1,56 @@
+---
+// Dynamic category route that serves pre-rendered HTML from S3
+
+export async function getStaticPaths() {
+  // For build time, use fallback categories since S3 may not be available
+  // In production, these would be generated dynamically by the Lambda
+  const fallbackCategories = ['machining', 'molding', 'fabrication', 'additive', 'electronics'];
+  
+  return fallbackCategories.map(category => ({
+    params: { category }
+  }));
+}
+
+// Get the category from the route parameters
+const { category } = Astro.params;
+
+// Fetch the pre-rendered HTML from S3
+const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
+let htmlContent = '';
+let errorMessage = '';
+
+try {
+  const htmlUrl = `${S3_BASE_URL}/test-data/catalog/${category}/index.html`;
+  const response = await fetch(htmlUrl);
+  
+  if (response.ok) {
+    htmlContent = await response.text();
+  } else {
+    errorMessage = `Could not load content for category: ${category}`;
+    console.error('Failed to fetch pre-rendered HTML:', response.status, response.statusText);
+  }
+} catch (error) {
+  errorMessage = `Could not load content for category: ${category}`;
+  console.error('Error fetching pre-rendered HTML:', error);
+}
+---
+
+{errorMessage ? (
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Category Not Found - Terra</title>
+    </head>
+    <body>
+      <div style="text-align: center; padding: 2rem;">
+        <h1>Category Not Found</h1>
+        <p>{errorMessage}</p>
+        <a href="/">Return to Home</a>
+      </div>
+    </body>
+  </html>
+) : (
+  <!-- Serve the pre-rendered HTML directly -->
+  <Fragment set:html={htmlContent} />
+)}

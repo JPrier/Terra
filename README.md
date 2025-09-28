@@ -96,6 +96,16 @@ npm install
 npm run deploy
 ```
 
+### Development Setup
+
+**First-time setup:**
+```bash
+# Install git hooks for automatic code formatting
+./scripts/setup-hooks.sh
+```
+
+This installs a pre-commit hook that automatically runs `cargo fmt --all` before each commit to ensure consistent Rust code formatting.
+
 ### Frontend Development  
 
 ```bash

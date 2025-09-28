@@ -13,6 +13,66 @@ const AWS_REGION = 'us-east-1';
 const PUBLIC_BUCKET = 'app-public-test';
 const PRIVATE_BUCKET = 'app-private-test';
 
+// Simple HTML template function to generate category pages
+function generateCategoryHTML(category, manufacturers) {
+  const title = `${category.charAt(0).toUpperCase() + category.slice(1)} Manufacturers`;
+  
+  const manufacturerCards = manufacturers.map(m => `
+    <article class="card manufacturer-card">
+      <div class="manufacturer-info">
+        <h3><a href="/catalog/manufacturer/${m.id}/">${m.name}</a></h3>
+        <p class="location">${m.city}, ${m.state}</p>
+        <p class="categories">Categories: ${m.categories.join(', ')}</p>
+        <p class="capabilities">Capabilities: ${m.capabilities.join(', ')}</p>
+        <div class="actions">
+          <a href="/catalog/manufacturer/${m.id}/" class="btn">View Details</a>
+          <a href="/rfq/submit?mfg=${m.id}" class="btn btn-primary">Submit RFQ</a>
+        </div>
+      </div>
+    </article>
+  `).join('\n');
+  
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title} - Terra</title>
+  <link rel="stylesheet" href="/src/styles/globals.css">
+  <meta name="description" content="Find verified ${category} manufacturers" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <h1>Terra</h1>
+      <p class="tagline">US Manufacturing Directory & RFQ Platform</p>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/catalog/machining/">Browse Manufacturers</a>
+      </nav>
+    </div>
+  </header>
+  
+  <main class="main">
+    <h2>${title}</h2>
+    <p>Find qualified ${category} manufacturers and submit RFQs directly.</p>
+    
+    <div class="catalog-stats">
+      <p><strong>${manufacturers.length}</strong> verified manufacturers in ${category}</p>
+    </div>
+    
+    <div class="grid" id="manufacturer-grid">
+      ${manufacturerCards}
+    </div>
+  </main>
+  
+  <footer style="text-align: center; padding: 2rem; color: #7f8c8d; border-top: 1px solid #eee; margin-top: 4rem;">
+    <p>&copy; 2024 Terra Manufacturing Platform. Built for American manufacturing.</p>
+  </footer>
+</body>
+</html>`;
+}
+
 // Sample manufacturer data (Enhanced 5-manufacturer dataset)
 const sampleManufacturers = [
   {
@@ -124,6 +184,27 @@ async function createCatalogPages() {
     'electronics': sampleManufacturers.filter(m => m.categories.includes('Electronics Assembly') || m.categories.includes('PCB Assembly'))
   };
   
+  // Create categories index for frontend discovery
+  try {
+    const categoriesIndex = {
+      categories: Object.keys(categories),
+      last_updated: new Date().toISOString()
+    };
+    
+    const categoriesKey = `catalog/categories.json`;
+    await axios.put(`${LOCALSTACK_URL}/${PUBLIC_BUCKET}/${categoriesKey}`, 
+      JSON.stringify(categoriesIndex), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `AWS4-HMAC-SHA256 Credential=${AWS_ACCESS_KEY_ID}/${new Date().toISOString().split('T')[0]}/${AWS_REGION}/s3/aws4_request`,
+      }
+    });
+    
+    console.log(`✅ Created categories index with categories: ${Object.keys(categories).join(', ')}`);
+  } catch (error) {
+    console.error(`❌ Failed to create categories index:`, error.message);
+  }
+  
   for (const [category, manufacturers] of Object.entries(categories)) {
     try {
       const catalogKey = `catalog/category/${category}.json`;
@@ -147,6 +228,20 @@ async function createCatalogPages() {
       });
       
       console.log(`✅ Created catalog for category: ${category}`);
+      
+      // Also create pre-rendered HTML page for this category
+      const htmlContent = generateCategoryHTML(category, manufacturers);
+      const htmlKey = `catalog/${category}/index.html`;
+      
+      await axios.put(`${LOCALSTACK_URL}/${PUBLIC_BUCKET}/${htmlKey}`, 
+        htmlContent, {
+        headers: {
+          'Content-Type': 'text/html',
+          'Authorization': `AWS4-HMAC-SHA256 Credential=${AWS_ACCESS_KEY_ID}/${new Date().toISOString().split('T')[0]}/${AWS_REGION}/s3/aws4_request`,
+        }
+      });
+      
+      console.log(`✅ Created pre-rendered HTML for category: ${category}`);
     } catch (error) {
       console.error(`❌ Failed to create catalog for ${category}:`, error.message);
     }

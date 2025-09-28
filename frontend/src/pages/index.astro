@@ -1,5 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+// For build time, use fallback categories since S3 may not be available
+// In production with server-side rendering, this would fetch dynamically
+let categories = ['machining', 'molding', 'fabrication', 'additive', 'electronics'];
+
+// Create category display names mapping
+const categoryNames = {
+  'machining': 'CNC Machining',
+  'molding': 'Injection Molding', 
+  'fabrication': 'Sheet Metal',
+  'additive': '3D Printing',
+  'electronics': 'Electronics'
+};
+
+// Take first 3 categories for featured display
+const featuredCategories = categories.slice(0, 3);
 ---
 
 <BaseLayout title="Terra - US Manufacturing Directory">
@@ -15,7 +31,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="card">
       <h3>Browse Manufacturers</h3>
       <p>Explore our directory of verified US manufacturers across all categories.</p>
-      <a href={`${import.meta.env.BASE_URL}catalog/machining/`} class="btn">Browse Now</a>
+      <a href={`${import.meta.env.BASE_URL}catalog/${categories[0] || 'machining'}/`} class="btn">Browse Now</a>
     </div>
 
     <div class="card">
@@ -45,11 +61,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
   <div class="card">
     <h3>Popular Categories</h3>
-    <p>CNC Machining • 3D Printing • Injection Molding • Sheet Metal • Electronics • Fabrication</p>
+    <p>{categories.map(cat => categoryNames[cat] || cat).join(' • ')}</p>
     <div style="margin-top: 1rem;">
-      <a href={`${import.meta.env.BASE_URL}catalog/machining/`} class="btn" style="margin-right: 1rem;">CNC Machining</a>
-      <a href={`${import.meta.env.BASE_URL}catalog/fabrication/`} class="btn" style="margin-right: 1rem;">Sheet Metal</a>
-      <a href={`${import.meta.env.BASE_URL}catalog/molding/`} class="btn">Injection Molding</a>
+      {featuredCategories.map((category, index) => (
+        <a 
+          href={`${import.meta.env.BASE_URL}catalog/${category}/`} 
+          class="btn" 
+          style={index < featuredCategories.length - 1 ? "margin-right: 1rem;" : ""}
+        >
+          {categoryNames[category] || category}
+        </a>
+      ))}
     </div>
   </div>
 </BaseLayout>
