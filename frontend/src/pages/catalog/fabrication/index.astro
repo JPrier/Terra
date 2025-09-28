@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
+import { createFallbackCatalogData } from '../../../data/manufacturers';
 
 // Fetch manufacturer data from S3 (CDK deployed test data)
 const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
@@ -13,51 +14,15 @@ try {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
   } else {
-    // Fallback to new test data structure for development
-    manufacturers = [
-      {
-        id: "industrial-metal-fabricators",
-        name: "Industrial Metal Fabricators",
-        city: "Pittsburgh",
-        state: "PA",
-        logoUrl: null,
-        categories: ["Sheet Metal", "Fabrication", "Welding", "Industrial Equipment"],
-        capabilities: [
-          "Laser Cutting up to 1\" Steel",
-          "Press Brake Forming",
-          "TIG/MIG Welding",
-          "Powder Coating",
-          "CNC Punching",
-          "Assembly Services",
-          "Heavy Fabrication",
-          "Custom Enclosures"
-        ]
-      }
-    ];
+    // Fallback to static data
+    const fallbackData = createFallbackCatalogData('fabrication');
+    manufacturers = fallbackData.manufacturers;
   }
 } catch (error) {
   console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
-  // Fallback data with new enhanced manufacturer
-  manufacturers = [
-    {
-      id: "industrial-metal-fabricators",
-      name: "Industrial Metal Fabricators",
-      city: "Pittsburgh",
-      state: "PA",
-      logoUrl: null,
-      categories: ["Sheet Metal", "Fabrication", "Welding", "Industrial Equipment"],
-      capabilities: [
-        "Laser Cutting up to 1\" Steel",
-        "Press Brake Forming",
-        "TIG/MIG Welding",
-        "Powder Coating",
-        "CNC Punching",
-        "Assembly Services",
-        "Heavy Fabrication",
-        "Custom Enclosures"
-      ]
-    }
-  ];
+  // Fallback to static data
+  const fallbackData = createFallbackCatalogData('fabrication');
+  manufacturers = fallbackData.manufacturers;
 }
 ---
 

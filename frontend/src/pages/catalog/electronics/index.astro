@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
+import { createFallbackCatalogData } from '../../../data/manufacturers';
 
 // Fetch manufacturer data from S3 (CDK deployed test data)
 const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
@@ -13,51 +14,15 @@ try {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
   } else {
-    // Fallback to new test data structure for development
-    manufacturers = [
-      {
-        id: "precision-electronics-assembly",
-        name: "Precision Electronics Assembly",
-        city: "San Jose",
-        state: "CA",
-        logoUrl: null,
-        categories: ["Electronics Assembly", "PCB Assembly", "Contract Manufacturing", "Testing"],
-        capabilities: [
-          "Surface Mount Technology (SMT)",
-          "Through-Hole Assembly",
-          "Mixed Technology PCBs",
-          "BGA/μBGA Assembly",
-          "Functional Testing",
-          "Box Build Assembly",
-          "Cable Assembly",
-          "Quality Inspection (AOI/X-ray)"
-        ]
-      }
-    ];
+    // Fallback to static data
+    const fallbackData = createFallbackCatalogData('electronics');
+    manufacturers = fallbackData.manufacturers;
   }
 } catch (error) {
   console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
-  // Fallback data with new enhanced manufacturer
-  manufacturers = [
-    {
-      id: "precision-electronics-assembly",
-      name: "Precision Electronics Assembly",
-      city: "San Jose",
-      state: "CA",
-      logoUrl: null,
-      categories: ["Electronics Assembly", "PCB Assembly", "Contract Manufacturing", "Testing"],
-      capabilities: [
-        "Surface Mount Technology (SMT)",
-        "Through-Hole Assembly",
-        "Mixed Technology PCBs",
-        "BGA/μBGA Assembly",
-        "Functional Testing",
-        "Box Build Assembly",
-        "Cable Assembly",
-        "Quality Inspection (AOI/X-ray)"
-      ]
-    }
-  ];
+  // Fallback to static data
+  const fallbackData = createFallbackCatalogData('electronics');
+  manufacturers = fallbackData.manufacturers;
 }
 ---
 

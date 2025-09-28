@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
+import { createFallbackCatalogData } from '../../../data/manufacturers';
 
 // Fetch manufacturer data from S3 (CDK deployed test data)
 const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
@@ -13,51 +14,15 @@ try {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
   } else {
-    // Fallback to new test data structure for development
-    manufacturers = [
-      {
-        id: "rapid-additive-solutions",
-        name: "Rapid Additive Solutions",
-        city: "Denver",
-        state: "CO",
-        logoUrl: null,
-        categories: ["3D Printing", "Additive Manufacturing", "Prototyping", "Low-Volume Production"],
-        capabilities: [
-          "SLA High-Resolution Printing",
-          "SLS Nylon Production",
-          "FDM Engineering Plastics",
-          "Metal 3D Printing (DMLS)",
-          "Post-Processing Services",
-          "Design for Additive",
-          "Rapid Prototyping",
-          "Bridge Manufacturing"
-        ]
-      }
-    ];
+    // Fallback to static data
+    const fallbackData = createFallbackCatalogData('additive');
+    manufacturers = fallbackData.manufacturers;
   }
 } catch (error) {
   console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
-  // Fallback data with new enhanced manufacturer
-  manufacturers = [
-    {
-      id: "rapid-additive-solutions",
-      name: "Rapid Additive Solutions",
-      city: "Denver",
-      state: "CO",
-      logoUrl: null,
-      categories: ["3D Printing", "Additive Manufacturing", "Prototyping", "Low-Volume Production"],
-      capabilities: [
-        "SLA High-Resolution Printing",
-        "SLS Nylon Production",
-        "FDM Engineering Plastics",
-        "Metal 3D Printing (DMLS)",
-        "Post-Processing Services",
-        "Design for Additive",
-        "Rapid Prototyping",
-        "Bridge Manufacturing"
-      ]
-    }
-  ];
+  // Fallback to static data
+  const fallbackData = createFallbackCatalogData('additive');
+  manufacturers = fallbackData.manufacturers;
 }
 ---
 

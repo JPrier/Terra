@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
+import { createFallbackCatalogData } from '../../../data/manufacturers';
 
 // Fetch manufacturer data from S3 (CDK deployed test data)
 const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
@@ -13,51 +14,15 @@ try {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
   } else {
-    // Fallback to new test data structure for development
-    manufacturers = [
-      {
-        id: "advanced-molding-systems",
-        name: "Advanced Molding Systems",
-        city: "Austin",
-        state: "TX",
-        logoUrl: null,
-        categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
-        capabilities: [
-          "High-Volume Injection Molding",
-          "Multi-Cavity Tooling",
-          "Overmolding",
-          "Insert Molding",
-          "Medical Grade Materials",
-          "Clean Room Production",
-          "Secondary Operations",
-          "Assembly Services"
-        ]
-      }
-    ];
+    // Fallback to static data
+    const fallbackData = createFallbackCatalogData('molding');
+    manufacturers = fallbackData.manufacturers;
   }
 } catch (error) {
   console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
-  // Fallback data with new enhanced manufacturer
-  manufacturers = [
-    {
-      id: "advanced-molding-systems",
-      name: "Advanced Molding Systems",
-      city: "Austin",
-      state: "TX",
-      logoUrl: null,
-      categories: ["Injection Molding", "Plastics", "Consumer Electronics"],
-      capabilities: [
-        "High-Volume Injection Molding",
-        "Multi-Cavity Tooling",
-        "Overmolding",
-        "Insert Molding",
-        "Medical Grade Materials",
-        "Clean Room Production",
-        "Secondary Operations",
-        "Assembly Services"
-      ]
-    }
-  ];
+  // Fallback to static data
+  const fallbackData = createFallbackCatalogData('molding');
+  manufacturers = fallbackData.manufacturers;
 }
 ---
 
