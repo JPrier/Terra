@@ -1,28 +1,25 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
-import { createFallbackCatalogData } from '../../../data/manufacturers';
 
-// Fetch manufacturer data from S3 (CDK deployed test data)
+// Fetch manufacturer data from S3 (CDK deployed data)
 const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
 let manufacturers = [];
+let errorMessage = '';
 
 try {
-  // Fetch catalog data for additive category
+  // Fetch catalog data for additive category from S3
   const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/additive.json`);
   if (response.ok) {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
   } else {
-    // Fallback to static data
-    const fallbackData = createFallbackCatalogData('additive');
-    manufacturers = fallbackData.manufacturers;
+    errorMessage = 'Unable to load manufacturer data. Please check back later.';
+    console.error('Failed to fetch manufacturer data from S3:', response.status, response.statusText);
   }
 } catch (error) {
-  console.warn('Failed to fetch manufacturer data from S3, using fallback data:', error);
-  // Fallback to static data
-  const fallbackData = createFallbackCatalogData('additive');
-  manufacturers = fallbackData.manufacturers;
+  errorMessage = 'Unable to load manufacturer data. Please check back later.';
+  console.error('Failed to fetch manufacturer data from S3:', error);
 }
 ---
 
@@ -32,15 +29,23 @@ try {
     <p>Find advanced additive manufacturing and 3D printing services for rapid prototyping and low-volume production.</p>
   </section>
 
-  <div class="catalog-stats">
-    <p><strong>{manufacturers.length}</strong> verified manufacturers in 3D Printing & Additive Manufacturing</p>
-  </div>
+  {errorMessage ? (
+    <div class="error-message">
+      <p>{errorMessage}</p>
+    </div>
+  ) : (
+    <>
+      <div class="catalog-stats">
+        <p><strong>{manufacturers.length}</strong> verified manufacturers in 3D Printing & Additive Manufacturing</p>
+      </div>
 
-  <div class="manufacturer-grid">
-    {manufacturers.map(manufacturer => (
-      <ManufacturerCard manufacturer={manufacturer} />
-    ))}
-  </div>
+      <div class="manufacturer-grid">
+        {manufacturers.map(manufacturer => (
+          <ManufacturerCard manufacturer={manufacturer} />
+        ))}
+      </div>
+    </>
+  )}
 
   <div class="cta-section">
     <div class="card">
@@ -58,6 +63,16 @@ try {
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
+  }
+
+  .error-message {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    color: #856404;
   }
 
   .manufacturer-grid {
