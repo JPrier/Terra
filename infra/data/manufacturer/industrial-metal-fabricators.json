@@ -1,0 +1,37 @@
+{
+  "id": "industrial-metal-fabricators",
+  "name": "Industrial Metal Fabricators",
+  "city": "Pittsburgh",
+  "state": "PA",
+  "categories": [
+    "Sheet Metal",
+    "Fabrication",
+    "Welding",
+    "Industrial Equipment"
+  ],
+  "capabilities": [
+    "Laser Cutting up to 1\" Steel",
+    "Press Brake Forming",
+    "TIG/MIG Welding",
+    "Powder Coating",
+    "CNC Punching",
+    "Assembly Services",
+    "Heavy Fabrication",
+    "Custom Enclosures"
+  ],
+  "description": "Full-service metal fabrication shop specializing in custom industrial equipment, enclosures, and structural components. 40,000 sq ft facility with advanced laser cutting, forming, and welding capabilities. Serving oil & gas, power generation, and industrial automation industries with projects ranging from prototypes to large-scale production runs.",
+  "contact_email": "projects@industrial-metal-fab.com",
+  "certifications": [
+    "AWS D1.1",
+    "ASME U-Stamp",
+    "ISO 9001"
+  ],
+  "materials": [
+    "Carbon Steel",
+    "Stainless Steel",
+    "Aluminum",
+    "Galvanized Steel"
+  ],
+  "min_order_quantity": "1 to 1000+ units",
+  "lead_time_weeks": "1-6 weeks"
+}

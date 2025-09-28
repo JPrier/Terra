@@ -1,0 +1,29 @@
+{
+  "category": "machining",
+  "name": "CNC Machining",
+  "description": "Precision CNC machining and manufacturing services",
+  "count": 1,
+  "manufacturers": [
+    {
+      "id": "precision-aerospace-cnc",
+      "name": "Precision Aerospace CNC",
+      "city": "Seattle",
+      "state": "WA",
+      "categories": [
+        "CNC Machining",
+        "Aerospace",
+        "Precision Manufacturing"
+      ],
+      "capabilities": [
+        "5-axis CNC Machining",
+        "Titanium Alloys",
+        "Aluminum 7075",
+        "Stainless Steel 316L",
+        "AS9100 Certified",
+        "Prototype to Production",
+        "Tight Tolerances ±0.0005\"",
+        "Complex Geometries"
+      ]
+    }
+  ]
+}

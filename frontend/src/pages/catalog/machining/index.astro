@@ -2,36 +2,25 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
 
-// Sample manufacturers for CNC Machining category
-const manufacturers = [
-  {
-    id: "precision-parts-co",
-    name: "Precision Parts Co",
-    city: "Detroit",
-    state: "MI",
-    logoUrl: null,
-    categories: ["CNC Machining", "Precision Manufacturing"],
-    capabilities: ["5-axis CNC", "Aluminum", "Steel", "Prototype to Production"]
-  },
-  {
-    id: "midwest-machining",
-    name: "Midwest Machining Solutions", 
-    city: "Chicago",
-    state: "IL",
-    logoUrl: null,
-    categories: ["CNC Machining", "Turning", "Milling"],
-    capabilities: ["CNC Turning", "CNC Milling", "Aerospace Grade", "ISO 9001"]
-  },
-  {
-    id: "advanced-cnc-systems",
-    name: "Advanced CNC Systems",
-    city: "Cleveland",
-    state: "OH", 
-    logoUrl: null,
-    categories: ["CNC Machining", "Custom Manufacturing"],
-    capabilities: ["3-axis CNC", "4-axis CNC", "Titanium", "Medical Device Manufacturing"]
+// Fetch manufacturer data from S3 (CDK deployed data)
+const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
+let manufacturers = [];
+let errorMessage = '';
+
+try {
+  // Fetch catalog data for machining category from S3
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/machining.json`);
+  if (response.ok) {
+    const catalogData = await response.json();
+    manufacturers = catalogData.manufacturers || [];
+  } else {
+    errorMessage = 'Unable to load manufacturer data. Please check back later.';
+    console.error('Failed to fetch manufacturer data from S3:', response.status, response.statusText);
   }
-];
+} catch (error) {
+  errorMessage = 'Unable to load manufacturer data. Please check back later.';
+  console.error('Failed to fetch manufacturer data from S3:', error);
+}
 ---
 
 <BaseLayout title="CNC Machining Manufacturers - Terra">
@@ -40,15 +29,23 @@ const manufacturers = [
     <p>Find verified US-based CNC machining manufacturers for your precision manufacturing needs.</p>
   </section>
 
-  <div class="catalog-stats">
-    <p><strong>{manufacturers.length}</strong> verified manufacturers in CNC Machining</p>
-  </div>
+  {errorMessage ? (
+    <div class="error-message">
+      <p>{errorMessage}</p>
+    </div>
+  ) : (
+    <>
+      <div class="catalog-stats">
+        <p><strong>{manufacturers.length}</strong> verified manufacturers in CNC Machining</p>
+      </div>
 
-  <div class="manufacturer-grid">
-    {manufacturers.map(manufacturer => (
-      <ManufacturerCard manufacturer={manufacturer} />
-    ))}
-  </div>
+      <div class="manufacturer-grid">
+        {manufacturers.map(manufacturer => (
+          <ManufacturerCard manufacturer={manufacturer} />
+        ))}
+      </div>
+    </>
+  )}
 
   <div class="cta-section">
     <div class="card">
@@ -66,6 +63,16 @@ const manufacturers = [
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
+  }
+
+  .error-message {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    color: #856404;
   }
 
   .manufacturer-grid {

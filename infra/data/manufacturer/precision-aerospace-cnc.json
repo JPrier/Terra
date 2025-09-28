@@ -1,0 +1,36 @@
+{
+  "id": "precision-aerospace-cnc",
+  "name": "Precision Aerospace CNC",
+  "city": "Seattle",
+  "state": "WA",
+  "categories": [
+    "CNC Machining",
+    "Aerospace",
+    "Precision Manufacturing"
+  ],
+  "capabilities": [
+    "5-axis CNC Machining",
+    "Titanium Alloys",
+    "Aluminum 7075",
+    "Stainless Steel 316L",
+    "AS9100 Certified",
+    "Prototype to Production",
+    "Tight Tolerances ±0.0005\"",
+    "Complex Geometries"
+  ],
+  "description": "Premier aerospace precision machining company specializing in critical flight components. AS9100 and ISO 9001 certified with over 25 years of experience serving Boeing, Lockheed Martin, and other aerospace leaders. Expertise in complex 5-axis machining of exotic materials with tolerances as tight as ±0.0005 inches.",
+  "contact_email": "quotes@precision-aerospace-cnc.com",
+  "certifications": [
+    "AS9100",
+    "ISO 9001",
+    "ITAR Registered"
+  ],
+  "materials": [
+    "Titanium Ti-6Al-4V",
+    "Aluminum 7075-T6",
+    "Stainless 316L",
+    "Inconel 625"
+  ],
+  "min_order_quantity": "Prototype to 10K+ units",
+  "lead_time_weeks": "2-8 weeks"
+}

@@ -2,45 +2,25 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ManufacturerCard from '../../../components/ManufacturerCard.astro';
 
-// Sample manufacturers for Sheet Metal/Fabrication category
-const manufacturers = [
-  {
-    id: "american-sheet-metal",
-    name: "American Sheet Metal Works",
-    city: "Pittsburgh",
-    state: "PA",
-    logoUrl: null,
-    categories: ["Sheet Metal", "Fabrication", "Welding"],
-    capabilities: ["Laser Cutting", "Forming", "Welding", "Powder Coating"]
-  },
-  {
-    id: "midwest-fabrication",
-    name: "Midwest Fabrication Inc", 
-    city: "Milwaukee",
-    state: "WI",
-    logoUrl: null,
-    categories: ["Fabrication", "Sheet Metal", "Assembly"],
-    capabilities: ["Plasma Cutting", "Press Brake", "TIG Welding", "Custom Assembly"]
-  },
-  {
-    id: "precision-metal-fab",
-    name: "Precision Metal Fabricators",
-    city: "Houston",
-    state: "TX", 
-    logoUrl: null,
-    categories: ["Sheet Metal", "Precision Fabrication"],
-    capabilities: ["Waterjet Cutting", "CNC Punching", "Stainless Steel", "Aluminum"]
-  },
-  {
-    id: "coastal-fabrication",
-    name: "Coastal Fabrication LLC",
-    city: "Norfolk",
-    state: "VA", 
-    logoUrl: null,
-    categories: ["Marine Fabrication", "Sheet Metal", "Structural Steel"],
-    capabilities: ["Heavy Fabrication", "Marine Grade Materials", "Large Scale Projects"]
+// Fetch manufacturer data from S3 (CDK deployed data)
+const S3_BASE_URL = import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net';
+let manufacturers = [];
+let errorMessage = '';
+
+try {
+  // Fetch catalog data for fabrication category from S3
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/fabrication.json`);
+  if (response.ok) {
+    const catalogData = await response.json();
+    manufacturers = catalogData.manufacturers || [];
+  } else {
+    errorMessage = 'Unable to load manufacturer data. Please check back later.';
+    console.error('Failed to fetch manufacturer data from S3:', response.status, response.statusText);
   }
-];
+} catch (error) {
+  errorMessage = 'Unable to load manufacturer data. Please check back later.';
+  console.error('Failed to fetch manufacturer data from S3:', error);
+}
 ---
 
 <BaseLayout title="Sheet Metal & Fabrication Manufacturers - Terra">
@@ -49,15 +29,23 @@ const manufacturers = [
     <p>Connect with verified US sheet metal and fabrication specialists for your metalworking projects.</p>
   </section>
 
-  <div class="catalog-stats">
-    <p><strong>{manufacturers.length}</strong> verified manufacturers in Sheet Metal & Fabrication</p>
-  </div>
+  {errorMessage ? (
+    <div class="error-message">
+      <p>{errorMessage}</p>
+    </div>
+  ) : (
+    <>
+      <div class="catalog-stats">
+        <p><strong>{manufacturers.length}</strong> verified manufacturers in Sheet Metal & Fabrication</p>
+      </div>
 
-  <div class="manufacturer-grid">
-    {manufacturers.map(manufacturer => (
-      <ManufacturerCard manufacturer={manufacturer} />
-    ))}
-  </div>
+      <div class="manufacturer-grid">
+        {manufacturers.map(manufacturer => (
+          <ManufacturerCard manufacturer={manufacturer} />
+        ))}
+      </div>
+    </>
+  )}
 
   <div class="cta-section">
     <div class="card">
@@ -75,6 +63,16 @@ const manufacturers = [
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
+  }
+
+  .error-message {
+    text-align: center;
+    margin: 2rem 0;
+    padding: 2rem;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    color: #856404;
   }
 
   .manufacturer-grid {

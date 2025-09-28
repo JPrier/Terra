@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -54,6 +55,20 @@ export class TerraStack extends cdk.Stack {
           prefix: 'idem/',
           expiration: cdk.Duration.days(1),
         },
+      ],
+    });
+
+    // Deploy test manufacturer data to public S3 bucket
+    const testDataDeployment = new s3deploy.BucketDeployment(this, 'TestDataDeployment', {
+      sources: [s3deploy.Source.asset('./data')],
+      destinationBucket: publicBucket,
+      destinationKeyPrefix: 'test-data/',
+      // Replace existing data on redeploy
+      prune: true,
+      // Cache control for JSON data files
+      cacheControl: [
+        s3deploy.CacheControl.setPublic(),
+        s3deploy.CacheControl.maxAge(cdk.Duration.hours(1)),
       ],
     });
 
@@ -229,6 +244,37 @@ export class TerraStack extends cdk.Stack {
     const manufacturers = v1.addResource('manufacturers');
     manufacturers.addMethod('POST', new apigateway.LambdaIntegration(apiManufacturersLambda));
 
+    // Add a manual trigger for the publisher Lambda (for demo purposes)
+    const publisherTrigger = new lambda.Function(this, 'PublisherTriggerLambda', {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      handler: 'index.handler',
+      code: lambda.Code.fromInline(`
+        const AWS = require('aws-sdk');
+        const lambda = new AWS.Lambda();
+        
+        exports.handler = async (event) => {
+          try {
+            const result = await lambda.invoke({
+              FunctionName: '${publisherLambda.functionName}',
+              InvocationType: 'Event',
+              Payload: JSON.stringify({ trigger: 'manual', timestamp: new Date().toISOString() })
+            }).promise();
+            
+            return {
+              statusCode: 200,
+              body: JSON.stringify({ message: 'Catalog rebuild triggered', result })
+            };
+          } catch (error) {
+            return {
+              statusCode: 500,
+              body: JSON.stringify({ error: error.message })
+            };
+          }
+        };
+      `),
+      timeout: cdk.Duration.seconds(30),
+    });
+
     // Publisher trigger endpoint (admin)
     const publisherResource = v1.addResource('publisher');
     const publisherTriggerResource = publisherResource.addResource('trigger');
@@ -285,37 +331,6 @@ export class TerraStack extends cdk.Stack {
       },
     });
 
-    // Add a manual trigger for the publisher Lambda (for demo purposes)
-    const publisherTrigger = new lambda.Function(this, 'PublisherTriggerLambda', {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromInline(`
-        const AWS = require('aws-sdk');
-        const lambda = new AWS.Lambda();
-        
-        exports.handler = async (event) => {
-          try {
-            const result = await lambda.invoke({
-              FunctionName: '${publisherLambda.functionName}',
-              InvocationType: 'Event',
-              Payload: JSON.stringify({ trigger: 'manual', timestamp: new Date().toISOString() })
-            }).promise();
-            
-            return {
-              statusCode: 200,
-              body: JSON.stringify({ message: 'Catalog rebuild triggered', result })
-            };
-          } catch (error) {
-            return {
-              statusCode: 500,
-              body: JSON.stringify({ error: error.message })
-            };
-          }
-        };
-      `),
-      timeout: cdk.Duration.seconds(30),
-    });
-
     // Grant permissions for the trigger to invoke the publisher
     publisherLambda.grantInvoke(publisherTrigger);
 
@@ -330,12 +345,12 @@ export class TerraStack extends cdk.Stack {
       description: 'CloudFront Distribution URL',
     });
 
-    new cdk.CfnOutput(this, 'PublicBucket', {
+    new cdk.CfnOutput(this, 'PublicBucketName', {
       value: publicBucket.bucketName,
       description: 'Public S3 Bucket Name',
     });
 
-    new cdk.CfnOutput(this, 'PrivateBucket', {
+    new cdk.CfnOutput(this, 'PrivateBucketName', {
       value: privateBucket.bucketName,
       description: 'Private S3 Bucket Name',
     });

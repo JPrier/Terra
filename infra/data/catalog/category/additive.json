@@ -1,0 +1,30 @@
+{
+  "category": "additive",
+  "name": "3D Printing & Additive",
+  "description": "Additive manufacturing and 3D printing services",
+  "count": 1,
+  "manufacturers": [
+    {
+      "id": "rapid-additive-solutions",
+      "name": "Rapid Additive Solutions",
+      "city": "Denver",
+      "state": "CO",
+      "categories": [
+        "3D Printing",
+        "Additive Manufacturing",
+        "Prototyping",
+        "Low-Volume Production"
+      ],
+      "capabilities": [
+        "SLA High-Resolution Printing",
+        "SLS Nylon Production",
+        "FDM Engineering Plastics",
+        "Metal 3D Printing (DMLS)",
+        "Post-Processing Services",
+        "Design for Additive",
+        "Rapid Prototyping",
+        "Bridge Manufacturing"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "category": "fabrication",
+  "name": "Sheet Metal & Fabrication",
+  "description": "Metal fabrication and sheet metal services",
+  "count": 1,
+  "manufacturers": [
+    {
+      "id": "industrial-metal-fabricators",
+      "name": "Industrial Metal Fabricators",
+      "city": "Pittsburgh",
+      "state": "PA",
+      "categories": [
+        "Sheet Metal",
+        "Fabrication",
+        "Welding",
+        "Industrial Equipment"
+      ],
+      "capabilities": [
+        "Laser Cutting up to 1\" Steel",
+        "Press Brake Forming",
+        "TIG/MIG Welding",
+        "Powder Coating",
+        "CNC Punching",
+        "Assembly Services",
+        "Heavy Fabrication",
+        "Custom Enclosures"
+      ]
+    }
+  ]
+}

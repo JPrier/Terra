@@ -1,0 +1,40 @@
+{
+  "id": "advanced-molding-systems",
+  "name": "Advanced Molding Systems",
+  "city": "Austin",
+  "state": "TX",
+  "categories": [
+    "Injection Molding",
+    "Plastics",
+    "Consumer Electronics"
+  ],
+  "capabilities": [
+    "High-Volume Injection Molding",
+    "Multi-Cavity Tooling",
+    "Overmolding",
+    "Insert Molding",
+    "Medical Grade Materials",
+    "Clean Room Production",
+    "Secondary Operations",
+    "Assembly Services"
+  ],
+  "description": "Leading injection molding manufacturer serving consumer electronics, medical devices, and automotive industries. State-of-the-art facility with 50+ molding machines ranging from 50-1000 tons. ISO 13485 certified for medical devices with Class 7 clean room capabilities. Specializes in high-volume production and complex multi-material assemblies.",
+  "contact_email": "info@advanced-molding-systems.com",
+  "certifications": [
+    "ISO 13485",
+    "ISO 9001",
+    "FDA Registered",
+    "TS 16949"
+  ],
+  "materials": [
+    "PC",
+    "ABS",
+    "PP",
+    "PE",
+    "TPU",
+    "PEEK",
+    "Medical Grade Resins"
+  ],
+  "min_order_quantity": "1,000 to 10M+ units",
+  "lead_time_weeks": "4-12 weeks"
+}

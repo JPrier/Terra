@@ -8,8 +8,8 @@ let manufacturers = [];
 let errorMessage = '';
 
 try {
-  // Fetch catalog data for molding category from S3
-  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/molding.json`);
+  // Fetch catalog data for additive category from S3
+  const response = await fetch(`${S3_BASE_URL}/test-data/catalog/category/additive.json`);
   if (response.ok) {
     const catalogData = await response.json();
     manufacturers = catalogData.manufacturers || [];
@@ -23,10 +23,10 @@ try {
 }
 ---
 
-<BaseLayout title="Injection Molding Manufacturers - Terra">
+<BaseLayout title="3D Printing & Additive Manufacturing - Terra">
   <section class="hero">
-    <h2>Injection Molding Manufacturers</h2>
-    <p>Find trusted US injection molding manufacturers for your plastic part production needs.</p>
+    <h2>3D Printing & Additive Manufacturing</h2>
+    <p>Find advanced additive manufacturing and 3D printing services for rapid prototyping and low-volume production.</p>
   </section>
 
   {errorMessage ? (
@@ -36,7 +36,7 @@ try {
   ) : (
     <>
       <div class="catalog-stats">
-        <p><strong>{manufacturers.length}</strong> verified manufacturers in Injection Molding</p>
+        <p><strong>{manufacturers.length}</strong> verified manufacturers in 3D Printing & Additive Manufacturing</p>
       </div>
 
       <div class="manufacturer-grid">
