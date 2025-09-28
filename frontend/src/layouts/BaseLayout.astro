@@ -16,6 +16,7 @@ const { title, description = "Terra - US Manufacturing Directory & RFQ Platform"
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <meta name="s3-base-url" content={import.meta.env.PUBLIC_S3_URL || 'https://your-cloudfront-domain.cloudfront.net'} />
     <title>{title}</title>
   </head>
   <body>
@@ -37,5 +38,13 @@ const { title, description = "Terra - US Manufacturing Directory & RFQ Platform"
     <footer style="text-align: center; padding: 2rem; color: #7f8c8d; border-top: 1px solid #eee; margin-top: 4rem;">
       <p>&copy; 2024 Terra Manufacturing Platform. Built for American manufacturing.</p>
     </footer>
+    
+    <!-- S3 HTML Prefetching Script -->
+    <script>
+      // Set global variables for the prefetch utility
+      window.PUBLIC_S3_URL = document.querySelector('meta[name="s3-base-url"]')?.getAttribute('content');
+      window.BASE_URL = `${import.meta.env.BASE_URL}`;
+    </script>
+    <script src={`${import.meta.env.BASE_URL}js/prefetch.js`}></script>
   </body>
 </html>
