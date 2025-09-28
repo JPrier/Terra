@@ -292,6 +292,25 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
         }
     }
 
+    // Generate categories index for frontend discovery
+    let categories: Vec<String> = category_groups.keys().cloned().collect();
+    let categories_index = json!({
+        "categories": categories,
+        "last_updated": now.clone()
+    });
+
+    let categories_key = "catalog/categories.json";
+    s3_client
+        .put_object()
+        .bucket(&bucket)
+        .key(categories_key)
+        .body(categories_index.to_string().into_bytes().into())
+        .content_type("application/json")
+        .cache_control("public, max-age=300") // 5 minutes
+        .send()
+        .await
+        .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload categories index: {}", e)))?;
+
     // Generate category slices and HTML pages
     for (category, manufacturers) in category_groups {
         // Generate JSON slice
