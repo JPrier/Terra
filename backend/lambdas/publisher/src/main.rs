@@ -309,7 +309,9 @@ async fn function_handler(event: LambdaEvent<Value>) -> Result<Value, lambda_run
         .cache_control("public, max-age=300") // 5 minutes
         .send()
         .await
-        .map_err(|e| lambda_runtime::Error::from(format!("Failed to upload categories index: {}", e)))?;
+        .map_err(|e| {
+            lambda_runtime::Error::from(format!("Failed to upload categories index: {}", e))
+        })?;
 
     // Generate category slices and HTML pages
     for (category, manufacturers) in category_groups {
