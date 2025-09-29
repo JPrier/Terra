@@ -90,10 +90,21 @@ cargo lambda start
 
 ### Infrastructure Deployment
 
+**Automated Deployment (Recommended):**
+The repository includes automated CDK deployment via GitHub Actions that runs on every push to the main branch. See [CDK Deployment Guide](docs/CDK_DEPLOYMENT.md) for setup instructions.
+
+**Manual Deployment:**
 ```bash
 cd infra
 npm install
 npm run deploy
+```
+
+**Testing Infrastructure:**
+```bash
+cd infra
+npm test          # Run CDK unit tests
+npm run synth     # Validate CloudFormation synthesis
 ```
 
 ### Development Setup
