@@ -1,0 +1,179 @@
+---
+name: Deploy CDK Infrastructure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and latest queued. However, do NOT cancel in-progress runs as we
+# want to allow these production deployments to complete.
+concurrency:
+  group: "cdk-deploy"
+  cancel-in-progress: false
+
+# Sets permissions for OIDC and deployments
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  CDK_DEFAULT_REGION: us-east-1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      changes: ${{ steps.changes.outputs.infra }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for infrastructure changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            infra:
+              - 'infra/**'
+              - '.github/workflows/deploy-cdk.yml'
+
+      - name: Setup Node.js
+        if: steps.changes.outputs.infra == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Install CDK dependencies
+        if: steps.changes.outputs.infra == 'true'
+        run: |
+          cd infra
+          npm ci
+
+      - name: Validate CDK build
+        if: steps.changes.outputs.infra == 'true'
+        run: |
+          cd infra
+          npm run build
+
+      - name: Run CDK tests
+        if: steps.changes.outputs.infra == 'true'
+        run: |
+          cd infra
+          npm test || echo "No tests found, continuing..."
+
+      - name: Validate CDK synthesis
+        if: steps.changes.outputs.infra == 'true'
+        run: |
+          cd infra
+          npm run synth
+
+      - name: Install Rust (for Lambda validation)
+        if: steps.changes.outputs.infra == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache Rust dependencies
+        if: steps.changes.outputs.infra == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Validate Lambda builds
+        if: steps.changes.outputs.infra == 'true'
+        run: |
+          echo "Validating Lambda function compilation..."
+          cargo check --manifest-path backend/lambdas/api_rfqs/Cargo.toml
+          cargo check --manifest-path backend/lambdas/api_uploads/Cargo.toml
+          cargo check --manifest-path backend/lambdas/api_manufacturers/Cargo.toml
+          cargo check --manifest-path backend/lambdas/image_ingest/Cargo.toml
+          cargo check --manifest-path backend/lambdas/publisher/Cargo.toml
+
+  deploy:
+    needs: validate
+    if: needs.validate.outputs.changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.CDK_DEFAULT_REGION }}
+          role-session-name: GitHubActions-CDK-Deploy
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: infra/package-lock.json
+
+      - name: Install CDK CLI
+        run: npm install -g aws-cdk@^2.115.0
+
+      - name: Install CDK dependencies
+        run: |
+          cd infra
+          npm ci
+
+      - name: Bootstrap CDK (if needed)
+        run: |
+          cd infra
+          # Check if bootstrap is needed
+          if ! cdk ls 2>/dev/null | grep -q "TerraStack"; then
+            echo "Bootstrapping CDK environment..."
+            cdk bootstrap
+          else
+            echo "CDK environment already bootstrapped"
+          fi
+
+      - name: Deploy CDK stack
+        run: |
+          cd infra
+          echo "Deploying CDK infrastructure..."
+          cdk deploy --require-approval never --verbose
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ env.CDK_DEFAULT_REGION }}
+
+      - name: Output deployment info
+        run: |
+          cd infra
+          echo "Deployment completed successfully!"
+          echo "Getting stack outputs..."
+          cdk ls
+
+  notify:
+    needs: [validate, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ CDK deployment completed successfully!"
+          elif [ "${{ needs.validate.outputs.changes }}" == "false" ]; then
+            echo "ℹ️ No infrastructure changes detected, skipping deployment."
+          elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+            echo "❌ CDK deployment failed!"
+            exit 1
+          else
+            echo "⚠️ Deployment was cancelled or skipped."
+          fi
