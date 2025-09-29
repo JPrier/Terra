@@ -51,3 +51,7 @@ cdk.out/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Playwright test artifacts
+tests/test-results/
+tests/playwright-report/
